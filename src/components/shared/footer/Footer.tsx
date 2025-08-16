@@ -47,7 +47,7 @@ const Footer = () => {
                 width={120}
                 height={40}
                 quality={100}
-                className="w-[120px] h-full object-cover"
+                className="w-[120px] h-full object-cover cursor-pointer"
               />
               <Image
                 src="/assets/images/google-play.png"
@@ -55,7 +55,7 @@ const Footer = () => {
                 width={120}
                 height={40}
                 quality={100}
-                className="w-[120px] h-full object-cover"
+                className="w-[120px] h-full object-cover cursor-pointer"
               />
             </div>
           </div>
