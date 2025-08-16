@@ -94,21 +94,23 @@ const HeroSection = () => {
           <SwiperSlide key={index} className="!h-auto !md:h-full">
             <div
               style={{ backgroundImage: `url(${blog?.img})` }}
-              className="bg-cover bg-center bg-no-repeat h-screen w-full object-cover relative"
+              className=" bg-cover bg-center bg-no-repeat h-[500px] md:h-[600px] lg:h-[840px] w-full object-cover"
             >
-              <div className="absolute bottom-10 md:bottom-14 lg:bottom-20 left-10 md:left-14 lg:left-20">
-                <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
-                  {blog?.title}
-                </h1>
-                <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
-                  {blog?.cast}
-                </p>
-                <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%] py-2">
-                  {blog?.director}
-                </p>
-                <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
-                  {blog?.rleaseDate}
-                </p>
+              <div className="container">
+                <div className="h-[450px] md:h-[550px] lg:h-[750px] flex flex-col justify-end items-start pl-10 md:pl-14 lg:pl-20 pb-5 md:pb-8 lg:pb-10">
+                  <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
+                    {blog?.title}
+                  </h1>
+                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
+                    {blog?.cast}
+                  </p>
+                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%] py-2">
+                    {blog?.director}
+                  </p>
+                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
+                    {blog?.rleaseDate}
+                  </p>
+                </div>
               </div>
             </div>
           </SwiperSlide>

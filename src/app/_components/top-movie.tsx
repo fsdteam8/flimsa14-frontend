@@ -16,19 +16,19 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 const breakpoints = {
   0: {
     slidesPerView: 1,
-    spaceBetween: 25,
+    spaceBetween: 20,
   },
   768: {
     slidesPerView: 2,
-    spaceBetween: 30,
+    spaceBetween: 25,
   },
   1024: {
     slidesPerView: 3,
-    spaceBetween: 45,
+    spaceBetween: 30,
   },
   1440: {
     slidesPerView: 4,
-    spaceBetween: 66,
+    spaceBetween: 30,
   },
 };
 
@@ -81,8 +81,8 @@ const TopMovie = () => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
   return (
-    <div className="container mx-auto">
-      <h2 className="text-3xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+    <div className="container">
+      <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
         Top 10 Movies this Week
       </h2>
       <div className="w-full flex items-center relative">

@@ -81,9 +81,9 @@ const TvShows = () => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
   return (
-    <div className="container mx-auto">
+    <div className="container">
       <div className="w-full flex items-center justify-between">
-        <h2 className="text-3xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+        <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
           TV Shows
         </h2>
         <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
