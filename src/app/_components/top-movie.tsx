@@ -88,7 +88,7 @@ const TopMovie = () => {
       <div className="w-full flex items-center relative">
         <div className="absolute left-0 z-10">
           <button onClick={() => swiperRef.current?.slideNext()}>
-            <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
+            <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white cursor-pointer hover:text-white hover:underline" />
           </button>
         </div>
 

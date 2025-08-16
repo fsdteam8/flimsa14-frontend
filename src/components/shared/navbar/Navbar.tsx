@@ -23,7 +23,7 @@ const Navbar = () => {
             alt="Logo"
             width={113}
             height={40}
-            className="w-full h-auto object-cover"
+            className="w-full h-auto object-cover cursor-pointer"
           />
           <nav className="hidden md:block">
             <ul className="flex items-center gap-4 md:gap-6 lg:gap-8">
@@ -46,9 +46,9 @@ const Navbar = () => {
         {/* search and profile  */}
         <div className="hidden md:block">
           <div className=" flex items-center gap-3">
-            <Search className="w-10 h-10 text-white" />
-            <BellRing className="w-10 h-10 text-white" />
-            <CircleUserRound className="w-10 h-10 text-white" />
+            <Search className="w-10 h-10 text-white cursor-pointer" />
+            <BellRing className="w-10 h-10 text-white cursor-pointer" />
+            <CircleUserRound className="w-10 h-10 text-white cursor-pointer" />
           </div>
         </div>
 
@@ -66,7 +66,7 @@ const Navbar = () => {
                   alt="Logo"
                   width={113}
                   height={40}
-                  className="w-[113px] h-auto object-cover"
+                  className="w-[113px] h-auto object-cover cursor-pointer"
                 />
               </div>
               <ul className="flex flex-col items-center gap-4 md:gap-6 lg:gap-8 pt-6">
@@ -88,9 +88,9 @@ const Navbar = () => {
                 })}
               </ul>
               <div className=" flex items-center justify-center gap-5 pt-7">
-                <Search className="w-10 h-10 text-[#707070]" />
-                <BellRing className="w-10 h-10 text-[#707070]" />
-                <CircleUserRound className="w-10 h-10 text-[#707070]" />
+                <Search className="w-10 h-10 text-[#707070] cursor-pointer" />
+                <BellRing className="w-10 h-10 text-[#707070] cursor-pointer" />
+                <CircleUserRound className="w-10 h-10 text-[#707070] cursor-pointer" />
               </div>
             </SheetContent>
           </Sheet>
