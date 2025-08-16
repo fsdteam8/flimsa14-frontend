@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useRef } from "react";
+import React, { useRef, useState } from "react";
 
 // Swiper
 import "swiper/css";
@@ -11,6 +11,11 @@ import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import { BellRing, ChevronLeft, ChevronRight } from "lucide-react";
+import dynamic from "next/dynamic";
+
+const ViewDetails = dynamic(() => import("./view-details"), {
+  ssr: false,
+});
 
 const breakpoints = {
   0: {
@@ -77,6 +82,8 @@ const cartData: movieDataType[] = [
   },
 ];
 const Upcoming = () => {
+  const [isOpen, setIsOpen] = useState(false);
+
   const swiperRef = useRef<SwiperCore | null>(null);
 
   return (
@@ -115,10 +122,11 @@ const Upcoming = () => {
           {cartData?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
               <div
+                onClick={() => setIsOpen(true)}
                 style={{ backgroundImage: `url(${blog?.img})` }}
-                className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] relative"
+                className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] relative cursor-pointer"
               >
-                <BellRing className="w-10 h-10 text-white absolute bottom-5 right-5"/>
+                <BellRing className="w-10 h-10 text-white absolute bottom-5 right-5" />
               </div>
             </SwiperSlide>
           ))}
@@ -130,6 +138,13 @@ const Upcoming = () => {
           </button>
         </div>
       </div>
+
+      {/* modal open  */}
+      {isOpen && (
+        <div>
+          <ViewDetails open={isOpen} onOpenChange={() => setIsOpen(false)} />
+        </div>
+      )}
     </div>
   );
 };

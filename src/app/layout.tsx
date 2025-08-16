@@ -3,6 +3,7 @@ import "./globals.css";
 import Navbar from "@/components/shared/navbar/Navbar";
 import Footer from "@/components/shared/footer/Footer";
 import { Manrope } from "next/font/google";
+import 'video-react/dist/video-react.css';
 
 export const manrope = Manrope({
   subsets: ["latin"], // include the character sets you need
