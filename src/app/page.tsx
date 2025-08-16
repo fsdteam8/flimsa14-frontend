@@ -6,18 +6,15 @@ import FamilyMovie from "./_components/family-movie";
 import Dramas from "./_components/dramas";
 import TvShows from "./_components/tv-shows";
 import HeroSection from "./_components/hero-section";
-import Navbar from "@/components/shared/navbar/Navbar";
+import Upcoming from "./_components/upcoming";
 
 const HomePage = () => {
   return (
     <div>
       <div className="relative">
-        <div className="sticky top-0 left-0 right-0 z-50">
-          <Navbar />
-        </div>
-        
         <HeroSection />
         <Popular />
+        <Upcoming />
         <TopMovie />
         <ComedyClub />
         <FamilyMovie />

@@ -86,14 +86,14 @@ const ComedyClub = () => {
         <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
           Comedy Club
         </h2>
-        <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
+        <p className="text-xl md:text-2xl lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
           See All
         </p>
       </div>
       <div className="w-full flex items-center relative">
         <div className="absolute left-0 z-10">
           <button onClick={() => swiperRef.current?.slideNext()}>
-            <ChevronLeft className="w-[80px] h-[80px] text-white" />
+            <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
           </button>
         </div>
 
@@ -122,7 +122,7 @@ const ComedyClub = () => {
 
         <div className="absolute right-0 z-10">
           <button onClick={() => swiperRef.current?.slidePrev()}>
-            <ChevronRight className="w-[80px] h-[80px] text-white" />
+            <ChevronRight className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
           </button>
         </div>
       </div>

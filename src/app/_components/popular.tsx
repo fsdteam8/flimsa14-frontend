@@ -88,7 +88,7 @@ const Popular = () => {
       <div className="w-full flex items-center relative">
         <div className="absolute left-0 z-10">
           <button onClick={() => swiperRef.current?.slideNext()}>
-            <ChevronLeft className="w-[80px] h-[80px] text-white" />
+            <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
           </button>
         </div>
 
@@ -117,7 +117,7 @@ const Popular = () => {
 
         <div className="absolute right-0 z-10">
           <button onClick={() => swiperRef.current?.slidePrev()}>
-            <ChevronRight className="w-[80px] h-[80px] text-white" />
+            <ChevronRight className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
           </button>
         </div>
       </div>

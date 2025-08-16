@@ -10,8 +10,7 @@ import "swiper/css/virtual";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
-import MovieCart from "@/components/common/movie-cart";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { BellRing, ChevronLeft, ChevronRight } from "lucide-react";
 
 const breakpoints = {
   0: {
@@ -23,11 +22,11 @@ const breakpoints = {
     spaceBetween: 25,
   },
   1024: {
-    slidesPerView: 3,
+    slidesPerView: 2,
     spaceBetween: 30,
   },
   1440: {
-    slidesPerView: 4,
+    slidesPerView: 2,
     spaceBetween: 30,
   },
 };
@@ -77,14 +76,19 @@ const cartData: movieDataType[] = [
     type: "Comedy Drama",
   },
 ];
-const TopMovie = () => {
+const Upcoming = () => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
   return (
     <div className="container">
-      <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
-        Top 10 Movies this Week
-      </h2>
+      <div className="w-full flex items-center justify-between">
+        <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+          Upcoming
+        </h2>
+        <p className="text-xl md:text-2xl lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
+          See All
+        </p>
+      </div>
       <div className="w-full flex items-center relative">
         <div className="absolute left-0 z-10">
           <button onClick={() => swiperRef.current?.slideNext()}>
@@ -110,7 +114,12 @@ const TopMovie = () => {
         >
           {cartData?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
-              <MovieCart blog={blog} />
+              <div
+                style={{ backgroundImage: `url(${blog?.img})` }}
+                className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] relative"
+              >
+                <BellRing className="w-10 h-10 text-white absolute bottom-5 right-5"/>
+              </div>
             </SwiperSlide>
           ))}
         </Swiper>
@@ -125,4 +134,4 @@ const TopMovie = () => {
   );
 };
 
-export default TopMovie;
+export default Upcoming;
