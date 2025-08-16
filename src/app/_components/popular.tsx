@@ -10,8 +10,10 @@ import "swiper/css/virtual";
 import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
-import MovieCart from "@/components/common/movie-cart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { ContentResponse } from "./popular-data-type";
+import VideoCart from "@/components/common/video-cart";
 
 const breakpoints = {
   0: {
@@ -32,53 +34,71 @@ const breakpoints = {
   },
 };
 
-export interface movieDataType {
-  id: number;
-  title: string;
-  img: string;
-  type: string;
-}
+// export interface movieDataType {
+//   id: number;
+//   title: string;
+//   img: string;
+//   type: string;
+// }
 
-const cartData: movieDataType[] = [
-  {
-    id: 1,
-    title: "Movie 1",
-    img: "/assets/images/movie1.jpg",
-    type: "Comedy Drama",
-  },
-  {
-    id: 2,
-    title: "Movie 2",
-    img: "/assets/images/movie2.jpg",
-    type: "Comedy Drama",
-  },
-  {
-    id: 3,
-    title: "Movie 3",
-    img: "/assets/images/movie3.jpg",
-    type: "Comedy Drama",
-  },
-  {
-    id: 4,
-    title: "Movie 4",
-    img: "/assets/images/movie1.jpg",
-    type: "Comedy Drama",
-  },
-  {
-    id: 5,
-    title: "Movie 2",
-    img: "/assets/images/movie2.jpg",
-    type: "Comedy Drama",
-  },
-  {
-    id: 6,
-    title: "Movie 3",
-    img: "/assets/images/movie3.jpg",
-    type: "Comedy Drama",
-  },
-];
+// const cartData: movieDataType[] = [
+//   {
+//     id: 1,
+//     title: "Movie 1",
+//     img: "/assets/images/movie1.jpg",
+//     type: "Comedy Drama",
+//   },
+//   {
+//     id: 2,
+//     title: "Movie 2",
+//     img: "/assets/images/movie2.jpg",
+//     type: "Comedy Drama",
+//   },
+//   {
+//     id: 3,
+//     title: "Movie 3",
+//     img: "/assets/images/movie3.jpg",
+//     type: "Comedy Drama",
+//   },
+//   {
+//     id: 4,
+//     title: "Movie 4",
+//     img: "/assets/images/movie1.jpg",
+//     type: "Comedy Drama",
+//   },
+//   {
+//     id: 5,
+//     title: "Movie 2",
+//     img: "/assets/images/movie2.jpg",
+//     type: "Comedy Drama",
+//   },
+//   {
+//     id: 6,
+//     title: "Movie 3",
+//     img: "/assets/images/movie3.jpg",
+//     type: "Comedy Drama",
+//   },
+// ];
 const Popular = () => {
   const swiperRef = useRef<SwiperCore | null>(null);
+
+  const { data, isLoading, isError, error } = useQuery<ContentResponse>({
+    queryKey: ["propular-movie"],
+    queryFn: () =>
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contents`).then((res) =>
+        res.json()
+      ),
+  });
+
+  console.log(data?.data?.data);
+
+  if (isError) {
+    console.error(error);
+    return <div>Error loading popular movies</div>;
+  }
+  if (isLoading) {
+    return <div>Loading popular movies...</div>;
+  }
 
   return (
     <div className="container">
@@ -108,11 +128,16 @@ const Popular = () => {
           spaceBetween={12}
           className="w-full h-full"
         >
-          {cartData?.map((blog, index) => (
+          {data?.data?.data?.map((blog, index) => (
+            <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
+              <VideoCart blog={blog} />
+            </SwiperSlide>
+          ))}
+          {/* {cartData?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
               <MovieCart blog={blog} />
             </SwiperSlide>
-          ))}
+          ))} */}
         </Swiper>
 
         <div className="absolute right-0 z-10">

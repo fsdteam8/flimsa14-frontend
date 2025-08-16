@@ -1,0 +1,39 @@
+"use client";
+import React, { useState } from "react";
+import { ContentItem } from "@/app/_components/popular-data-type";
+import ViewDetails from "@/app/_components/view-details";
+
+const VideoCart = ({ blog }: { blog: ContentItem }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
+//   console.log(blog?.id);
+  return (
+    <div className="relative">
+      <div
+        onClick={() => {
+          setIsOpen(true);
+          setSelectedVideoId(blog?.id || null);
+        }}
+        style={{ backgroundImage: `url(${blog?.image || ""})` }}
+        className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
+      >
+        <div className="absolute bottom-3 right-0 left-0">
+          <h5 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[120%] text-center text-white">
+            {blog?.title}
+          </h5>
+          {/* <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
+          {blog?.title}
+        </p> */}
+        </div>
+      </div>
+         {/* modal open  */}
+      {isOpen && (
+        <div>
+          <ViewDetails open={isOpen} onOpenChange={() => setIsOpen(false)} videoId={selectedVideoId} />
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default VideoCart;

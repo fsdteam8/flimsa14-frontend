@@ -1,7 +1,8 @@
+import { movieDataType } from "@/app/_components/movie-data-type";
 import React from "react";
-import { movieDataType } from "@/app/_components/popular";
 
 const MovieCart = ({ blog }: { blog: movieDataType }) => {
+  
   return (
     <div className="relative">
       <div
