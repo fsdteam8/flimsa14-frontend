@@ -6,6 +6,7 @@ import FamilyMovie from "./_components/family-movie";
 import Dramas from "./_components/dramas";
 import TvShows from "./_components/tv-shows";
 import HeroSection from "./_components/hero-section";
+import Upcoming from "./_components/upcoming";
 
 const HomePage = () => {
   return (
@@ -13,6 +14,7 @@ const HomePage = () => {
       <div className="relative">
         <HeroSection />
         <Popular />
+        <Upcoming />
         <TopMovie />
         <ComedyClub />
         <FamilyMovie />

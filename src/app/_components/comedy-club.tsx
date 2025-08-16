@@ -86,7 +86,7 @@ const ComedyClub = () => {
         <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
           Comedy Club
         </h2>
-        <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
+        <p className="text-xl md:text-2xl lg:text-[32px] font-semibold text-[#BFBFBF] leading-[120%]">
           See All
         </p>
       </div>

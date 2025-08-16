@@ -9,13 +9,13 @@
 }
 
 body {
-  @apply bg-[#111111];
+  @apply bg-[#111111] font-manrope;
 }
 
 /* Make swiper pagination bullets white */
 .custom-swiper .swiper-pagination-bullet {
   background: #ffffff !important; /* white */
-  opacity: 0.6; 
+  opacity: 0.6;
   width: 20px;
   height: 20px;
 }
@@ -83,4 +83,3 @@ body {
     --chart-5: 340 75% 55%;
   }
 }
-

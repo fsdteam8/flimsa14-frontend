@@ -97,7 +97,7 @@ const HeroSection = () => {
               className=" bg-cover bg-center bg-no-repeat h-[500px] md:h-[600px] lg:h-[840px] w-full object-cover"
             >
               <div className="container">
-                <div className="h-[450px] md:h-[550px] lg:h-[750px] flex flex-col justify-end items-start pl-10 md:pl-14 lg:pl-20 pb-5 md:pb-8 lg:pb-10">
+                <div className="h-[450px] md:h-[550px] lg:h-[750px] flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-7 md:pb-8 lg:pb-10">
                   <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
                     {blog?.title}
                   </h1>

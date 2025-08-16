@@ -11,7 +11,7 @@ const Footer = () => {
       <div className="">
         {/* footer top  */}
         <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pt-10 md:pt-20 lg:pt-[120px] pb-6 md:pb-8 lg:pb-10">
-          <div className="md:col-span-1 w-full flex flex-col items-center">
+          <div className="md:col-span-1 w-full flex flex-col items-center md:items-start">
             <Image
               src="/assets/images/footer-logo.svg"
               alt="Logo"
