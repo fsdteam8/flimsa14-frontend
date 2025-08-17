@@ -1,22 +1,45 @@
-import { movieDataType } from "@/app/_components/movie-data-type";
-import React from "react";
+"use client";
+// import { movieDataType } from "@/app/_components/movie-data-type";
+import React, { useState } from "react";
+import { ContentItem } from "../types/home-page-all-data-type";
+import ViewDetails from "@/app/_components/view-details";
 
-const MovieCart = ({ blog }: { blog: movieDataType }) => {
-  
+const MovieCart = ({ blog }: { blog: ContentItem }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
+
   return (
-    <div className="relative">
+    <div>
       <div
-        style={{ backgroundImage: `url(${blog?.img})` }}
-        className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
-      ></div>
-      <div className="absolute bottom-3 right-0 left-0">
-        <h5 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[120%] text-white text-center ">
-          {blog?.title}
-        </h5>
-        <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
-          {blog?.type}
+        onClick={() => {
+          setIsOpen(true);
+          setSelectedVideoId(blog?.id || null);
+        }}
+        className="relative"
+      >
+        <div
+          style={{ backgroundImage: `url(${blog?.image})` }}
+          className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
+        ></div>
+        <div className="absolute bottom-3 right-0 left-0">
+          <h5 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[120%] text-white text-center ">
+            {blog?.title}
+          </h5>
+          <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
+          {blog?.genre_name || "Genre Not Available"}
         </p>
+        </div>
       </div>
+      {/* modal open  */}
+      {isOpen && (
+        <div>
+          <ViewDetails
+            open={isOpen}
+            onOpenChange={() => setIsOpen(false)}
+            videoId={selectedVideoId}
+          />
+        </div>
+      )}
     </div>
   );
 };

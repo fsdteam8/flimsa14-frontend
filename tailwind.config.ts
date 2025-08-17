@@ -18,7 +18,7 @@ const config: Config = {
         screens: {
           sm: "100%",
           md: "100%",
-          lg: "1370px",
+          lg: "1400px",
         },
       },
       colors: {

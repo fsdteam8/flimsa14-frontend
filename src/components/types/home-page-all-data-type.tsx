@@ -6,7 +6,7 @@ export interface HomePageApiResponse {
     upcoming: ContentItem[];
     weekly_top: ContentItem[];
     latest: ContentItem[];
-    "reality tv": ContentItem[];
+    reality_tv: ContentItem[];
     cooking: ContentItem[];
     romance: ContentItem[];
     documentary: ContentItem[];

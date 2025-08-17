@@ -94,21 +94,21 @@ const HeroSection = () => {
           <SwiperSlide key={index} className="!h-auto !md:h-full">
             <div
               style={{ backgroundImage: `url(${blog?.img})` }}
-              className=" bg-cover bg-center bg-no-repeat h-[500px] md:h-[600px] lg:h-[840px] w-full object-cover"
+              className=" bg-cover bg-center bg-no-repeat h-[500px] md:h-[550px] lg:h-[550px] xl:h-[840px] w-full object-cover"
             >
               <div className="container">
-                <div className="h-[450px] md:h-[550px] lg:h-[750px] flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-7 md:pb-8 lg:pb-10">
+                <div className="h-[450px] md:h-[550px] lg:h-[500px] xl:h-[750px] flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-7 md:pb-16 lg:pb-16 xl:pb-16">
                   <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
-                   {blog?.title}
+                    {blog?.title}
                   </h1>
                   <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
-                   Cast: {blog?.cast}
+                    Cast: {blog?.cast}
                   </p>
                   <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%] py-2">
-                   Director: {blog?.director}
+                    Director: {blog?.director}
                   </p>
                   <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
-                   Rlease: {blog?.rleaseDate}
+                    Rlease: {blog?.rleaseDate}
                   </p>
                 </div>
               </div>
