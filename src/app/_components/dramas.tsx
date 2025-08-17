@@ -13,6 +13,9 @@ import { Swiper as SwiperCore } from "swiper/types";
 import MovieCart from "@/components/common/movie-cart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ContentItem } from "@/components/types/home-page-all-data-type";
+import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
+import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
+import NotFound from "@/components/shared/NotFound/NotFound";
 
 const breakpoints = {
   0: {
@@ -33,9 +36,41 @@ const breakpoints = {
   },
 };
 
-const Dramas = ({ data }: { data: ContentItem[] }) => {
+const Dramas = ({
+  data,
+  isLoading,
+  error,
+  isError,
+}: {
+  data: ContentItem[];
+  isLoading: boolean;
+  error: Error;
+  isError: boolean;
+}) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
+  // console.log(data);
+
+  if (isLoading) {
+    return (
+      <div className="pt-10">
+        <SkeletonWrapper count={4} />
+      </div>
+    );
+  } else if (isError) {
+    return (
+      <div className="pt-10">
+        <ErrorContainer message={error?.message || "Something went wrong"} />
+      </div>
+    );
+  } else if (!data || data.length === 0) {
+    return (
+      <div className="pt-10">
+        <NotFound message="Oops! No data available. Modify your filters or check your internet connection." />
+      </div>
+    );
+  }
+  
   return (
     <div className="container">
       <div className="w-full flex items-center justify-between">

@@ -13,6 +13,9 @@ import { Swiper as SwiperCore } from "swiper/types";
 import { BellRing, ChevronLeft, ChevronRight } from "lucide-react";
 import dynamic from "next/dynamic";
 import { ContentItem } from "@/components/types/home-page-all-data-type";
+import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
+import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
+import NotFound from "@/components/shared/NotFound/NotFound";
 
 const ViewDetails = dynamic(() => import("./view-details"), {
   ssr: false,
@@ -37,12 +40,42 @@ const breakpoints = {
   },
 };
 
-const Upcoming = ({ data }: { data: ContentItem[] }) => {
-  console.log(data);
+const Upcoming = ({
+  data,
+  isLoading,
+  error,
+  isError,
+}: {
+  data: ContentItem[];
+  isLoading: boolean;
+  error: Error;
+  isError: boolean;
+}) => {
+  // console.log(data);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
 
   const swiperRef = useRef<SwiperCore | null>(null);
+
+  if (isLoading) {
+    return (
+      <div className="pt-10">
+        <SkeletonWrapper count={4} />
+      </div>
+    );
+  } else if (isError) {
+    return (
+      <div className="pt-10">
+        <ErrorContainer message={error?.message || "Something went wrong"} />
+      </div>
+    );
+  } else if (!data || data.length === 0) {
+    return (
+      <div className="pt-10">
+        <NotFound message="Oops! No data available. Modify your filters or check your internet connection." />
+      </div>
+    );
+  }
 
   return (
     <div className="container">

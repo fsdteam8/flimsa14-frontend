@@ -13,6 +13,9 @@ import { Swiper as SwiperCore } from "swiper/types";
 import MovieCart from "@/components/common/movie-cart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { ContentItem } from "@/components/types/home-page-all-data-type";
+import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
+import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
+import NotFound from "@/components/shared/NotFound/NotFound";
 
 const breakpoints = {
   0: {
@@ -33,9 +36,40 @@ const breakpoints = {
   },
 };
 
-const TopMovie = ({ data }: { data: ContentItem[] }) => {
+const TopMovie = ({
+  data,
+  isLoading,
+  error,
+  isError,
+}: {
+  data: ContentItem[];
+  isLoading: boolean;
+  error: Error;
+  isError: boolean;
+}) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
+  // console.log(data);
+
+  if (isLoading) {
+    return (
+      <div className="pt-10">
+        <SkeletonWrapper count={4} />
+      </div>
+    );
+  } else if (isError) {
+    return (
+      <div className="pt-10">
+        <ErrorContainer message={error?.message || "Something went wrong"} />
+      </div>
+    );
+  } else if (!data || data.length === 0) {
+    return (
+      <div className="pt-10">
+        <NotFound message="Oops! No data available. Modify your filters or check your internet connection." />
+      </div>
+    );
+  }
   return (
     <div className="container">
       <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
