@@ -26,25 +26,26 @@ const ViewDetails = ({
 
     return s3Url || "";
   }
-  
 
-  const { data, isLoading, isError, error } = useQuery<ViewVideoDetailResponse>({
-    queryKey: ["single-propular-movie", videoId],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getByContentId/${videoId}`).then((res) =>
-        res.json()
-      ),
-  });
+  const { data, isLoading, isError, error } = useQuery<ViewVideoDetailResponse>(
+    {
+      queryKey: ["single-propular-movie", videoId],
+      queryFn: () =>
+        fetch(
+          `${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getByContentId/${videoId}`
+        ).then((res) => res.json()),
+    }
+  );
 
   // console.log(data?.data);
   const filterVideo = data?.data;
+  console.log("Filter Video:", filterVideo);
 
   const videoUrl = JSON.parse(filterVideo?.video1 || "{}") || "";
 
   const cdnUrl = convertToCDNUrl(videoUrl.s3Url);
 
-  console.log(cdnUrl)
-
+  console.log(cdnUrl);
 
   if (isError) {
     console.error(error);
@@ -65,9 +66,16 @@ const ViewDetails = ({
               src={cdnUrl || ""}
             />
           </div>
-          <DialogDescription className="pb-10">
-            This action cannot be undone. This will permanently delete your
-            account and remove your data from our servers.
+          <DialogDescription className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-10">
+            <div className="md:col-span-1">
+              <h3 className="text-xl md:text-2xl lg:text-3xl font-bold leading-[120%] text-black">{filterVideo?.title || ""}</h3>
+              <p className="text-base md:text-lg font-normal leading-[120%] text-black py-2">{filterVideo?.description || ""}</p>
+            </div>
+            <div className="md:col-span-1">
+              <h4 className="text-xl md:text-2xl lg:text-3xl font-semibold leading-[120%] text-black"><strong>Director Name :</strong> {filterVideo?.director_name || ""}</h4>
+              <p className="text-base md:text-lg font-normal leading-[120%] text-black py-2"><strong>Duration :</strong> {filterVideo?.duration || ""}</p>
+              <p className="text-base md:text-lg font-normal leading-[120%] text-black"><strong>View Count :</strong> {filterVideo?.view_count || ""}</p>
+            </div>
           </DialogDescription>
         </DialogContent>
       </Dialog>
