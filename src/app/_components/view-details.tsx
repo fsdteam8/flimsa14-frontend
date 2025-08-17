@@ -2,8 +2,8 @@ import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Player } from "video-react";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { ContentResponse } from "./popular-data-type";
 import { useQuery } from "@tanstack/react-query";
+import { ViewVideoDetailResponse } from "@/components/types/view-details-page-data-type";
 
 const ViewDetails = ({
   open,
@@ -14,7 +14,7 @@ const ViewDetails = ({
   onOpenChange: () => void;
   videoId?: number | null;
 }) => {
-  console.log(`Video ID: ${videoId}`);
+  console.log(`Video ID 4: ${videoId}`);
 
   function convertToCDNUrl(s3Url?: string): string {
     const s3BaseUrl = "https://flimsabucket.s3.us-east-2.amazonaws.com";
@@ -28,18 +28,16 @@ const ViewDetails = ({
   }
   
 
-  const { data, isLoading, isError, error } = useQuery<ContentResponse>({
-    queryKey: ["single-propular-movie"],
+  const { data, isLoading, isError, error } = useQuery<ViewVideoDetailResponse>({
+    queryKey: ["single-propular-movie", videoId],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contents`).then((res) =>
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/getByContentId/${videoId}`).then((res) =>
         res.json()
       ),
   });
 
-  console.log(data?.data?.data);
-
-  const filterVideo = data?.data?.data?.find((video) => video.id === videoId);
-  console.log(filterVideo)
+  // console.log(data?.data);
+  const filterVideo = data?.data;
 
   const videoUrl = JSON.parse(filterVideo?.video1 || "{}") || "";
 

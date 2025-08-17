@@ -1,7 +1,8 @@
 "use client";
 import React, { useState } from "react";
-import { ContentItem } from "@/app/_components/popular-data-type";
+// import { ContentItem } from "@/app/_components/popular-data-type";
 import ViewDetails from "@/app/_components/view-details";
+import { ContentItem } from "../types/home-page-all-data-type";
 
 const VideoCart = ({ blog }: { blog: ContentItem }) => {
   const [isOpen, setIsOpen] = useState(false);
