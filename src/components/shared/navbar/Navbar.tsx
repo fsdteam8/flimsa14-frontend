@@ -17,7 +17,7 @@ const Navbar = () => {
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
       <div className="container w-full flex items-center justify-between py-6 md:py-7 lg:py-8 px-6 md:px-8 lg:px-10 ">
         {/* logo  */}
-        <div className="flex items-center gap-4 md:gap-6 lg:gap-8 ">
+        <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
           <Image
             src="/assets/images/logo.svg"
             alt="Logo"

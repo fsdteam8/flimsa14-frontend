@@ -16,6 +16,7 @@
     "cloudinary-video-player": "^3.2.1",
     "clsx": "^2.1.1",
     "lucide-react": "^0.539.0",
+    "motion": "^12.23.12",
     "next": "14.2.30",
     "react": "^18",
     "react-dom": "^18",

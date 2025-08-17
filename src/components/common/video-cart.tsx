@@ -1,12 +1,12 @@
 "use client";
 import React, { useState } from "react";
-import { ContentItem } from "@/app/_components/popular-data-type";
 import ViewDetails from "@/app/_components/view-details";
+import { ContentItem } from "../types/home-page-all-data-type";
 
 const VideoCart = ({ blog }: { blog: ContentItem }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
-//   console.log(blog?.id);
+  //   console.log(blog?.id);
   return (
     <div className="relative">
       <div
@@ -21,15 +21,19 @@ const VideoCart = ({ blog }: { blog: ContentItem }) => {
           <h5 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[120%] text-center text-white">
             {blog?.title}
           </h5>
-          {/* <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
-          {blog?.title}
-        </p> */}
+          <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
+            {blog?.genre_name || "Genre Not Available"}
+          </p>
         </div>
       </div>
-         {/* modal open  */}
+      {/* modal open  */}
       {isOpen && (
         <div>
-          <ViewDetails open={isOpen} onOpenChange={() => setIsOpen(false)} videoId={selectedVideoId} />
+          <ViewDetails
+            open={isOpen}
+            onOpenChange={() => setIsOpen(false)}
+            videoId={selectedVideoId}
+          />
         </div>
       )}
     </div>

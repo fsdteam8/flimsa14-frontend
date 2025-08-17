@@ -11,9 +11,11 @@ import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { useQuery } from "@tanstack/react-query";
-import { ContentResponse } from "./popular-data-type";
 import VideoCart from "@/components/common/video-cart";
+import { ContentItem } from "@/components/types/home-page-all-data-type";
+import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
+import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
+import NotFound from "@/components/shared/NotFound/NotFound";
 
 const breakpoints = {
   0: {
@@ -33,71 +35,39 @@ const breakpoints = {
     spaceBetween: 30,
   },
 };
-
-// export interface movieDataType {
-//   id: number;
-//   title: string;
-//   img: string;
-//   type: string;
-// }
-
-// const cartData: movieDataType[] = [
-//   {
-//     id: 1,
-//     title: "Movie 1",
-//     img: "/assets/images/movie1.jpg",
-//     type: "Comedy Drama",
-//   },
-//   {
-//     id: 2,
-//     title: "Movie 2",
-//     img: "/assets/images/movie2.jpg",
-//     type: "Comedy Drama",
-//   },
-//   {
-//     id: 3,
-//     title: "Movie 3",
-//     img: "/assets/images/movie3.jpg",
-//     type: "Comedy Drama",
-//   },
-//   {
-//     id: 4,
-//     title: "Movie 4",
-//     img: "/assets/images/movie1.jpg",
-//     type: "Comedy Drama",
-//   },
-//   {
-//     id: 5,
-//     title: "Movie 2",
-//     img: "/assets/images/movie2.jpg",
-//     type: "Comedy Drama",
-//   },
-//   {
-//     id: 6,
-//     title: "Movie 3",
-//     img: "/assets/images/movie3.jpg",
-//     type: "Comedy Drama",
-//   },
-// ];
-const Popular = () => {
+const Popular = ({
+  data,
+  isLoading,
+  error,
+  isError,
+}: {
+  data: ContentItem[];
+  isLoading: boolean;
+  error: Error;
+  isError: boolean;
+}) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
-  const { data, isLoading, isError, error } = useQuery<ContentResponse>({
-    queryKey: ["propular-movie"],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/contents`).then((res) =>
-        res.json()
-      ),
-  });
+  // console.log(data);
 
-  console.log(data?.data?.data);
-
-  if (isError) {
-    console.error(error);
-    return <div>Error loading popular movies</div>;
-  }
   if (isLoading) {
-    return <div>Loading popular movies...</div>;
+    return (
+      <div className="pt-10">
+        <SkeletonWrapper count={4} />
+      </div>
+    );
+  } else if (isError) {
+    return (
+      <div className="pt-10">
+        <ErrorContainer message={error?.message || "Something went wrong"} />
+      </div>
+    );
+  } else if (!data || data.length === 0) {
+    return (
+      <div className="pt-10">
+        <NotFound message="Oops! No data available. Modify your filters or check your internet connection." />
+      </div>
+    );
   }
 
   return (
@@ -106,11 +76,13 @@ const Popular = () => {
         Popular
       </h2>
       <div className="w-full flex items-center relative">
-        <div className="absolute left-0 z-10">
-          <button onClick={() => swiperRef.current?.slideNext()}>
-            <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
-          </button>
-        </div>
+        {data?.length > 4 && (
+          <div className="absolute left-0 z-10">
+            <button onClick={() => swiperRef.current?.slideNext()}>
+              <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
+            </button>
+          </div>
+        )}
 
         <Swiper
           modules={[Autoplay]}
@@ -128,23 +100,20 @@ const Popular = () => {
           spaceBetween={12}
           className="w-full h-full"
         >
-          {data?.data?.data?.map((blog, index) => (
+          {data?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
               <VideoCart blog={blog} />
             </SwiperSlide>
           ))}
-          {/* {cartData?.map((blog, index) => (
-            <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
-              <MovieCart blog={blog} />
-            </SwiperSlide>
-          ))} */}
         </Swiper>
 
-        <div className="absolute right-0 z-10">
-          <button onClick={() => swiperRef.current?.slidePrev()}>
-            <ChevronRight className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
-          </button>
-        </div>
+        {data?.length > 4 && (
+          <div className="absolute right-0 z-10">
+            <button onClick={() => swiperRef.current?.slidePrev()}>
+              <ChevronRight className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
