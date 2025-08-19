@@ -11,6 +11,7 @@ import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import "swiper/css/pagination";
+import { ContentItem } from "@/components/types/home-page-all-data-type";
 
 const breakpoints = {
   0: {
@@ -66,7 +67,8 @@ const cartData: movieDataType[] = [
     rleaseDate: "25 Merge 2026",
   },
 ];
-const HeroSection = () => {
+const HeroSection = ({ data }: { data: ContentItem[] }) => {
+  console.log(data);
   const swiperRef = useRef<SwiperCore | null>(null);
 
   return (
