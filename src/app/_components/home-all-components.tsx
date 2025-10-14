@@ -20,7 +20,7 @@ const HomeAllComponents = () => {
       ),
   });
 
-  // console.log(data?.data?.upcoming);
+  console.log(data?.data?.upcoming);
   return (
     <div className="">
       <section>
