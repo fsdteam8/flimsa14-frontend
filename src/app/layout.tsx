@@ -1,7 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Navbar from "@/components/shared/navbar/Navbar";
-import Footer from "@/components/shared/footer/Footer";
 import { Manrope } from "next/font/google";
 import "video-react/dist/video-react.css";
 import AppProvider from "@/components/provider/AppProvider";
@@ -25,11 +23,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${manrope.variable} antialiased`}>
-        <AppProvider>
-          <Navbar />
-          {children}
-          <Footer />
-        </AppProvider>
+        <AppProvider>{children}</AppProvider>
       </body>
     </html>
   );
