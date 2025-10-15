@@ -1,11 +1,30 @@
-import { AlignJustify, BellRing, CircleUserRound, Search } from "lucide-react";
+"use client";
+import {
+  AlignJustify,
+  BellRing,
+  CircleUserRound,
+  LogOut,
+  Search,
+} from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import React from "react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
+import { signOut, useSession } from "next-auth/react";
 
 const Navbar = () => {
+  const session = useSession();
+  // const token = (session?.data?.user as { accessToken: string })?.accessToken;
+  const user = session?.data?.user;
+  console.log(user);
   const menuItemsData = [
     { id: 1, title: "Comedy", link: "/" },
     { id: 2, title: "Action", link: "/" },
@@ -48,7 +67,37 @@ const Navbar = () => {
           <div className=" flex items-center gap-3">
             <Search className="w-10 h-10 text-white cursor-pointer" />
             <BellRing className="w-10 h-10 text-white cursor-pointer" />
-            <CircleUserRound className="w-10 h-10 text-white cursor-pointer" />
+
+            <div>
+              {user ? (
+                <DropdownMenu>
+                  <DropdownMenuTrigger>
+                    {" "}
+                    <CircleUserRound className="w-10 h-10 text-white cursor-pointer" />
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="bg-white mt-3">
+                    <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
+                      My Account
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="cursor-pointer text-red-500 text-base md:text-lg font-semibold leading-[120%]"
+                    >
+                      <LogOut /> Logout
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <button className="bg-white py-1 px-4 rounded-[10px] text-base md:text-lg font-semibold text-black leading-normal">
+                      Sign In
+                    </button>
+                  </Link>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
