@@ -199,6 +199,7 @@ const SignUpForm = () => {
                 </FormItem>
               )}
             />
+           
 
             <div className="pt-1">
               <Button
@@ -214,8 +215,8 @@ const SignUpForm = () => {
               </Button>
             </div>
             <p className="text-base font-normal text-white leading-[120%] text-center pt-4 md:pt-5 lg:pt-6">
-              Already have an account?{" "}
-              <Link className="hover:underline" href="/login">
+              Already have an account ?{" "}
+              <Link className="hover:underline pl-1" href="/login">
                 Sign in
               </Link>
             </p>

@@ -1,23 +1,19 @@
 import NextAuth from "next-auth";
-import { JWT } from "next-auth/jwt";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { JWT } from "next-auth/jwt";
 
 const handler = NextAuth({
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
-    maxAge: 30 * 24 * 60 * 60, // 30 day
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text", placeholder: "email" },
-        password: {
-          label: "Password",
-          type: "password",
-          placeholder: "password",
-        },
+        password: { label: "Password", type: "password", placeholder: "password" },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -29,9 +25,7 @@ const handler = NextAuth({
             `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/login`,
             {
               method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 email: credentials.email,
                 password: credentials.password,
@@ -40,24 +34,23 @@ const handler = NextAuth({
           );
 
           const response = await res.json();
-
-          console.log("response", response);
+          console.log("API Response:", response);
 
           if (!res.ok || !response?.success) {
             throw new Error(response?.message || "Login failed");
           }
-          //   if (response.data.user.role === "USER") {
-          //     throw new Error("Only admin can access this page");
-          //   }
-          const { user, accessToken } = response.data;
+
+          // Extract correct fields from response
+          const { accessToken, refreshToken, user, role, _id } = response.data;
 
           return {
-            id: user._id,
-            userName: user.userName,
-            email: user.email,
-            role: user.role,
-            imageLink: user.imageLink,
+            id: _id,
+            name: user?.name,
+            email: user?.email,
+            role: role || user?.role,
+            imageLink: user?.avatar?.url || "",
             accessToken,
+            refreshToken,
           };
         } catch (error) {
           console.error("Authentication error:", error);
@@ -72,28 +65,32 @@ const handler = NextAuth({
   ],
 
   callbacks: {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Handle JWT (server-side)
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     async jwt({ token, user }: { token: JWT; user?: any }) {
       if (user) {
         token.id = user.id;
-        token.userName = user.userName;
+        token.name = user.name;
         token.email = user.email;
         token.role = user.role;
         token.imageLink = user.imageLink;
         token.accessToken = user.accessToken;
+        token.refreshToken = user.refreshToken;
       }
       return token;
     },
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Handle Session (client-side)
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     async session({ session, token }: { session: any; token: JWT }) {
       session.user = {
         id: token.id,
-        userName: token.userName,
+        name: token.name,
         email: token.email,
         role: token.role,
         imageLink: token.imageLink,
         accessToken: token.accessToken,
+        refreshToken: token.refreshToken,
       };
       return session;
     },
