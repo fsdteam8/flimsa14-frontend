@@ -17,6 +17,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
+import { useMutation } from "@tanstack/react-query";
+import { toast } from "react-toastify";
 
 export const formSchema = z
   .object({
@@ -61,9 +63,36 @@ const SignUpForm = () => {
     },
   });
 
+  //   sign up api integration
+  const { mutate, isPending } = useMutation({
+    mutationKey: ["signUp"],
+    mutationFn: async (formData: z.infer<typeof formSchema>) => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/register`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(formData),
+        }
+      );
+      return response.json();
+    },
+    onSuccess: (data) => {
+      if (!data?.success) {
+        toast.error(data?.message || "Something went wrong!");
+        return;
+      }
+      toast.success(data?.message || "Registration successful!");
+      form.reset();
+    },
+  });
+
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
+    mutate(values);
   }
   return (
     <div className="px-3 md:px-0">
@@ -131,7 +160,7 @@ const SignUpForm = () => {
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-5"
+                        className="absolute right-5 top-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? <Eye /> : <EyeOff />}
@@ -157,7 +186,7 @@ const SignUpForm = () => {
                       />
                       <button
                         type="button"
-                        className="absolute right-3 top-5"
+                        className="absolute right-5 top-5"
                         onClick={() =>
                           setShowConfirmPassword(!showConfirmPassword)
                         }
@@ -173,10 +202,15 @@ const SignUpForm = () => {
 
             <div className="pt-1">
               <Button
-                className="w-full h-[52px] bg-white rounded-full py-4 px-8 text-base md:text-lg font-semibold text-[#111] leading-[120%]"
+                disabled={isPending}
+                className={`w-full h-[52px] bg-white rounded-full py-4 px-8 text-base md:text-lg font-semibold text-[#111] leading-[120%] ${
+                  isPending
+                    ? "opacity-50 cursor-not-allowed"
+                    : "hover:bg-[#111] hover:text-white hover:border hover:border-white"
+                } `}
                 type="submit"
               >
-                Sign Up
+                {isPending ? "Creating Account..." : "Sign Up"}
               </Button>
             </div>
             <p className="text-base font-normal text-white leading-[120%] text-center pt-4 md:pt-5 lg:pt-6">
