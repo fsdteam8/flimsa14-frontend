@@ -1,4 +1,3 @@
-
 import type { Metadata } from "next";
 import { Manrope } from "next/font/google";
 import "./globals.css";
@@ -6,6 +5,7 @@ import AppProvider from "@/components/provider/AppProvider";
 import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "video-react/dist/video-react.css";
+import AuthProvider from "@/components/provider/AuthProvider";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -26,10 +26,12 @@ export default function RootLayout({
   return (
     <html lang="en" className={manrope.variable}>
       <body>
-        <AppProvider>
-          {children}
-          <ToastContainer />
-        </AppProvider>
+        <AuthProvider>
+          <AppProvider>
+            {children}
+            <ToastContainer />
+          </AppProvider>
+        </AuthProvider>
       </body>
     </html>
   );
