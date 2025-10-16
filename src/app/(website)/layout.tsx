@@ -5,7 +5,7 @@ import React from "react";
 const MainLayout = ({ children }: { children: React.ReactNode }) => {
   return (
     <div>
-      <Navbar />
+        <Navbar />
       {children}
       <Footer />
     </div>

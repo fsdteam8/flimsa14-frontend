@@ -18,10 +18,10 @@ const VideoCart = ({ blog }: { blog: ContentItem }) => {
         className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
       >
         <div className="absolute bottom-3 right-0 left-0">
-          <h5 className="text-2xl md:text-3xl lg:text-4xl font-bold leading-[120%] text-center text-white">
+          <h5 className="text-xl md:text-2xl lg:text-3xl font-bold leading-[120%] text-center text-white">
             {blog?.title}
           </h5>
-          <p className="text-lg font-medium leading-[120%] text-white text-center pt-1">
+          <p className="text-base md:text-lg font-medium leading-[120%] text-white text-center pt-1">
             {blog?.genre_name || "Genre Not Available"}
           </p>
         </div>

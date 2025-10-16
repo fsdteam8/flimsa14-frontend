@@ -34,7 +34,7 @@ const Navbar = () => {
   ];
   return (
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
-      <div className="container w-full flex items-center justify-between py-6 md:py-7 lg:py-8 px-6 md:px-8 lg:px-10 ">
+      <div className="container w-full flex items-center justify-between py-2 lg:py-3 px-6 md:px-8 lg:px-10 ">
         {/* logo  */}
         <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
           <Image
@@ -50,7 +50,7 @@ const Navbar = () => {
                 return (
                   <li key={item.id} className=" text-white text-lg font-medium">
                     <Link
-                      className="whitespace-nowrap text-lg md:text-xl lg:text-2xl font-medium text-[#707070] leading-[120%] hover:underline hover:text-white"
+                      className="whitespace-nowrap text-base md:text-[17px] lg:text-lg font-medium text-[#707070] leading-[120%] hover:underline hover:text-white"
                       href={`${item.link}`}
                     >
                       {" "}
@@ -65,15 +65,15 @@ const Navbar = () => {
         {/* search and profile  */}
         <div className="hidden md:block">
           <div className=" flex items-center gap-3">
-            <Search className="w-10 h-10 text-white cursor-pointer" />
-            <BellRing className="w-10 h-10 text-white cursor-pointer" />
+            <Search className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
+            <BellRing className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
 
             <div>
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     {" "}
-                    <CircleUserRound className="w-10 h-10 text-white cursor-pointer" />
+                    <CircleUserRound className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white mt-3">
                     <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
@@ -137,9 +137,9 @@ const Navbar = () => {
                 })}
               </ul>
               <div className=" flex items-center justify-center gap-5 pt-7">
-                <Search className="w-10 h-10 text-[#707070] cursor-pointer" />
-                <BellRing className="w-10 h-10 text-[#707070] cursor-pointer" />
-                <CircleUserRound className="w-10 h-10 text-[#707070] cursor-pointer" />
+                <Search className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
+                <BellRing className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
+                <CircleUserRound className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
               </div>
             </SheetContent>
           </Sheet>

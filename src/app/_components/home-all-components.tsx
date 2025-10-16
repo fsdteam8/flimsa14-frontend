@@ -23,7 +23,7 @@ const HomeAllComponents = () => {
   console.log(data?.data?.upcoming);
   return (
     <div className="">
-      <section>
+      <section className="">
         <HeroSection data={data?.data?.popular || []} />
       </section>
 
