@@ -17,12 +17,14 @@ import Link from "next/link";
 import Image from "next/image";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
+import { useRouter } from "next/navigation";
 
 export const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
 });
 
 const ForgotPasswordForm = () => {
+  const router = useRouter();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -33,7 +35,7 @@ const ForgotPasswordForm = () => {
   //   forgot password api integration
   const { mutate, isPending } = useMutation({
     mutationKey: ["forgot-password"],
-    mutationFn: async (formData: z.infer<typeof formSchema>) => {
+    mutationFn: async (email: string) => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/forget`,
         {
@@ -41,25 +43,25 @@ const ForgotPasswordForm = () => {
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify(formData),
+          body: JSON.stringify({ email }),
         }
       );
       return response.json();
     },
-    onSuccess: (data) => {
+    onSuccess: (data, email) => {
       if (!data?.success) {
         toast.error(data?.message || "Something went wrong!");
         return;
       }
       toast.success(data?.message || "Password reset email sent!");
-      form.reset();
+      router.push(`/forgot-password/otp?email=${encodeURIComponent(email)}`);
     },
   });
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    mutate(values);
+    mutate(values?.email);
   }
   return (
     <div className="px-3 md:px-0">
