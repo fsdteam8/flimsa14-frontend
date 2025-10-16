@@ -72,14 +72,14 @@ const Popular = ({
 
   return (
     <div className="container">
-      <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
         Popular
       </h2>
       <div className="w-full flex items-center relative">
         {data?.length > 4 && (
           <div className="absolute left-0 z-10">
             <button onClick={() => swiperRef.current?.slideNext()}>
-              <ChevronLeft className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
+              <ChevronLeft className="w-[30px] md:w-[40px] lg:w-[50px] h-[30px] md:h-[40px] lg:h-[50px] text-white" />
             </button>
           </div>
         )}
@@ -110,7 +110,7 @@ const Popular = ({
         {data?.length > 4 && (
           <div className="absolute right-0 z-10">
             <button onClick={() => swiperRef.current?.slidePrev()}>
-              <ChevronRight className="w-[40px] md:w-[60px] lg:w-[80px] h-[40px] md:h-[60px] lg:h-[80px] text-white" />
+              <ChevronRight className="w-[30px] md:w-[40px] lg:w-[50px] h-[30px] md:h-[40px] lg:h-[50px] text-white" />
             </button>
           </div>
         )}

@@ -1,3 +1,7 @@
+
+
+
+
 "use client";
 
 import React, { useRef } from "react";
@@ -96,10 +100,10 @@ const HeroSection = ({ data }: { data: ContentItem[] }) => {
           <SwiperSlide key={index} className="!h-auto !md:h-full">
             <div
               style={{ backgroundImage: `url(${blog?.img})` }}
-              className=" bg-cover bg-center bg-no-repeat h-[500px] md:h-[550px] lg:h-[550px] xl:h-[840px] w-full object-cover"
+              className="bg-cover bg-center bg-no-repeat h-[450px] md:h-[550px] lg:h-[680px] w-full object-cover"
             >
               <div className="container">
-                <div className="h-[450px] md:h-[550px] lg:h-[500px] xl:h-[750px] flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-7 md:pb-16 lg:pb-16 xl:pb-16">
+                <div className="h-[450px] md:h-[550px] lg:h-[680px]  flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-14 md:pb-16 lg:pb-16 xl:pb-20">
                   <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
                     {blog?.title}
                   </h1>
