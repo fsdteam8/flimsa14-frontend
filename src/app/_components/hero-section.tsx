@@ -102,16 +102,16 @@ const HeroSection = () => {
             >
               <div className="container">
                 <div className="h-[450px] md:h-[550px] lg:h-[680px]  flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-14 md:pb-16 lg:pb-16 xl:pb-20">
-                  <h1 className="text-4xl md:text-5xl lg:text-[60px] text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
+                  <h1 className="text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
                     {blog?.title}
                   </h1>
-                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
+                  <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
                     Cast: {blog?.cast}
                   </p>
-                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%] py-2">
+                  <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%] py-2">
                     Director: {blog?.director}
                   </p>
-                  <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-white leading-[120%]">
+                  <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
                     Rlease: {blog?.rleaseDate}
                   </p>
                 </div>

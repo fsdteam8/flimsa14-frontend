@@ -25,7 +25,7 @@ const Footer = () => {
             </p>
           </div>
           <div className="md:col-span-1">
-            <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center">
+            <h3 className="text-lg md:text-xl lg:text-[22px] font-semibold text-white leading-[120%] text-center">
               FOLLOW US ON
             </h3>
             <div className="w-full flex items-center justify-center gap-4 md:gap-6 lg:gap-8 pt-3 md:pt-4">
@@ -37,7 +37,7 @@ const Footer = () => {
             </div>
           </div>
           <div className="md:col-span-1">
-            <h3 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center">
+            <h3 className="text-lg md:text-xl lg:text-[22px] font-semibold text-white leading-[120%] text-center">
               DOWNLOAD APP
             </h3>
             <div className="flex items-center justify-center gap-3 pt-3 md:pt-4">
@@ -63,13 +63,13 @@ const Footer = () => {
         {/* footer middle  */}
         <div className="py-6 md:py-8 lg:py-10 border-y border-[#272727]">
           <ul className="w-full flex flex-col md:flex-row items-center justify-center gap-4 md:gap-5">
-            <li className="text-lg md:text-xl lg:text-2xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
+            <li className="text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
               About App
             </li>
-            <li className="flex items-center gap-4 md:gap-5 text-lg md:text-xl lg:text-2xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
+            <li className="flex items-center gap-4 md:gap-5 text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
               <GoDotFill /> Privacy Policy
             </li>
-            <li className="flex items-center gap-4 md:gap-5 text-lg md:text-xl lg:text-2xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
+            <li className="flex items-center gap-4 md:gap-5 text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
               <GoDotFill /> Term & Condition
             </li>
           </ul>

@@ -11,6 +11,7 @@ import { useQuery } from "@tanstack/react-query";
 import HeroSection from "./hero-section";
 import { MovieApiResponse } from "@/components/types/home-page-update-data-type";
 import ComedyClub from "./comedy-club";
+import FamilyMovie from "./family-movie";
 
 const HomeAllComponents = () => {
 
@@ -89,18 +90,18 @@ const HomeAllComponents = () => {
         )}
       </section>
 
-      {/* <section>
-        {data?.data?.romance && data?.data?.romance.length > 0 && (
+      <section>
+        {moviesByGenre?.length > 0 && (
           <FamilyMovie
             isLoading={isLoading}
             isError={isError}
             error={error ?? new Error("Unknown error")}
-            data={data?.data?.romance || []}
+            data={moviesByGenre || []}
           />
         )}
       </section>
 
-      <section>
+      {/* <section>
         {data?.data?.documentary && data?.data?.documentary.length > 0 && (
           <Dramas
             isLoading={isLoading}

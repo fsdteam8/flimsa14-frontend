@@ -72,7 +72,7 @@ const Popular = ({
 
   return (
     <div className="container">
-      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
         Popular
       </h2>
       <div className="w-full flex items-center relative">
