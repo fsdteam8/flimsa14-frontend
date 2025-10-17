@@ -11,7 +11,7 @@ import { Autoplay } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import VideoCart from "@/components/common/video-cart";
+// import VideoCart from "@/components/common/video-cart";
 import { ContentItem } from "@/components/types/home-page-all-data-type";
 import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
 import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
@@ -72,7 +72,7 @@ const Popular = ({
 
   return (
     <div className="container">
-      <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
         Popular
       </h2>
       <div className="w-full flex items-center relative">
@@ -102,7 +102,7 @@ const Popular = ({
         >
           {data?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
-              <VideoCart blog={blog} />
+              {/* <VideoCart blog={blog} /> */}
             </SwiperSlide>
           ))}
         </Swiper>

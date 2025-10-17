@@ -12,10 +12,10 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import MovieCart from "@/components/common/movie-cart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ContentItem } from "@/components/types/home-page-all-data-type";
 import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
 import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
 import NotFound from "@/components/shared/NotFound/NotFound";
+import { GenreWiseMovies } from "@/components/types/home-page-update-data-type";
 
 const breakpoints = {
   0: {
@@ -42,12 +42,13 @@ const TopMovie = ({
   error,
   isError,
 }: {
-  data: ContentItem[];
+  data: GenreWiseMovies[];
   isLoading: boolean;
   error: Error;
   isError: boolean;
 }) => {
   const swiperRef = useRef<SwiperCore | null>(null);
+    const movies = data[0]?.movies || [];
 
   // console.log(data);
 
@@ -72,8 +73,8 @@ const TopMovie = ({
   }
   return (
     <div className="container">
-      <h2 className="text-2xl md:text-4xl lg:text-[60px] font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
-        {data?.[0]?.genre_name || "Top 10 Movies this Week"}
+      <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
+        {data[0]?.genre?.title || "Top 10 Movies this Week"}
       </h2>
       <div className="w-full flex items-center relative">
         {data?.length > 4 && (
@@ -100,7 +101,7 @@ const TopMovie = ({
           spaceBetween={12}
           className="w-full h-full"
         >
-          {data?.map((blog, index) => (
+          {movies?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
               <MovieCart blog={blog} />
             </SwiperSlide>

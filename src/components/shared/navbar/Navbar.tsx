@@ -65,15 +65,15 @@ const Navbar = () => {
         {/* search and profile  */}
         <div className="hidden md:block">
           <div className=" flex items-center gap-3">
-            <Search className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
-            <BellRing className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
+            <Search className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+            <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
 
             <div>
               {user ? (
                 <DropdownMenu>
                   <DropdownMenuTrigger>
                     {" "}
-                    <CircleUserRound className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-white cursor-pointer" />
+                    <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white mt-3">
                     <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
@@ -137,9 +137,9 @@ const Navbar = () => {
                 })}
               </ul>
               <div className=" flex items-center justify-center gap-5 pt-7">
-                <Search className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
-                <BellRing className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
-                <CircleUserRound className="w-6 md:w-7 lg:w-8 h-6 md:h-7 lg:h-8 text-[#707070] cursor-pointer" />
+                <Search className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
+                <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
+                <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
               </div>
             </SheetContent>
           </Sheet>

@@ -1,33 +1,52 @@
 "use client";
 import React from "react";
-import Popular from "./popular";
-import Upcoming from "./upcoming";
+// import Popular from "./popular";
+// import Upcoming from "./upcoming";
+// import ComedyClub from "./comedy-club";
+// import FamilyMovie from "./family-movie";
+// import TopMovie from "./top-movie";
+// import Dramas from "./dramas";
+// import TvShows from "./tv-shows";
+import { useQuery } from "@tanstack/react-query";
+import HeroSection from "./hero-section";
+import { MovieApiResponse } from "@/components/types/home-page-update-data-type";
 import ComedyClub from "./comedy-club";
 import FamilyMovie from "./family-movie";
-import TopMovie from "./top-movie";
-import Dramas from "./dramas";
-import TvShows from "./tv-shows";
-import { useQuery } from "@tanstack/react-query";
-import { HomePageApiResponse } from "@/components/types/home-page-all-data-type";
-import HeroSection from "./hero-section";
 
 const HomeAllComponents = () => {
-  const { data, isLoading, isError, error } = useQuery<HomePageApiResponse>({
+
+  // const { data, isLoading, isError, error } = useQuery<HomePageApiResponse>({
+  //   queryKey: ["home-page-all-data"],
+  //   queryFn: () =>
+  //     fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/home`).then((res) =>
+  //       res.json()
+  //     ),
+  // });
+
+  const { data, isLoading, isError, error } = useQuery<MovieApiResponse>({
     queryKey: ["home-page-all-data"],
     queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_URL}/api/home`).then((res) =>
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/movies`).then((res) =>
         res.json()
       ),
   });
 
-  console.log(data?.data?.upcoming);
+  if(isLoading){
+    return <div>Loading...</div>;
+  }
+  if(isError){
+    return <div>Error: {error?.message}</div>;
+  }
+
+  console.log(data?.data?.genreWiseMovies);
+  const moviesByGenre = data?.data?.genreWiseMovies || [];
   return (
     <div className="">
       <section className="">
-        <HeroSection data={data?.data?.popular || []} />
+        <HeroSection />
       </section>
 
-      <section>
+      {/* <section>
         {data?.data?.popular && data?.data?.popular.length > 0 && (
           <Popular
             isLoading={isLoading}
@@ -58,31 +77,31 @@ const HomeAllComponents = () => {
             data={data?.data?.weekly_top || []}
           />
         )}
-      </section>
+      </section> */}
 
       <section>
-        {data?.data?.cooking && data?.data?.cooking.length > 0 && (
+        {moviesByGenre?.length > 0 && (
           <ComedyClub
             isLoading={isLoading}
             isError={isError}
             error={error ?? new Error("Unknown error")}
-            data={data?.data?.cooking || []}
+            data={moviesByGenre || []}
           />
         )}
       </section>
 
       <section>
-        {data?.data?.romance && data?.data?.romance.length > 0 && (
+        {moviesByGenre?.length > 0 && (
           <FamilyMovie
             isLoading={isLoading}
             isError={isError}
             error={error ?? new Error("Unknown error")}
-            data={data?.data?.romance || []}
+            data={moviesByGenre || []}
           />
         )}
       </section>
 
-      <section>
+      {/* <section>
         {data?.data?.documentary && data?.data?.documentary.length > 0 && (
           <Dramas
             isLoading={isLoading}
@@ -102,7 +121,7 @@ const HomeAllComponents = () => {
             data={data?.data?.reality_tv || []}
           />
         )}
-      </section>
+      </section> */}
     </div>
   );
 };
