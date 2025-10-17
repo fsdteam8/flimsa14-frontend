@@ -3,7 +3,7 @@ import HomeAllComponents from "../_components/home-all-components";
 
 const HomePage = () => {
   return (
-    <div>
+    <div className="">
       <HomeAllComponents />
     </div>
   );
