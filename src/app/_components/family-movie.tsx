@@ -12,10 +12,10 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import MovieCart from "@/components/common/movie-cart";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { ContentItem } from "@/components/types/home-page-all-data-type";
 import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
 import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
 import NotFound from "@/components/shared/NotFound/NotFound";
+import { GenreWiseMovies } from "@/components/types/home-page-update-data-type";
 
 const breakpoints = {
   0: {
@@ -42,12 +42,13 @@ const FamilyMovie = ({
   error,
   isError,
 }: {
-  data: ContentItem[];
+  data: GenreWiseMovies[];
   isLoading: boolean;
   error: Error;
   isError: boolean;
 }) => {
   const swiperRef = useRef<SwiperCore | null>(null);
+    const movies = data[0]?.movies || [];
 
   // console.log(data);
 
@@ -74,7 +75,7 @@ const FamilyMovie = ({
     <div className="container">
       <div className="w-full flex items-center justify-between">
         <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
-          {data?.[0]?.genre_name || "Family Movie"}
+          {data[0]?.genre?.title || "Family Movie"}
         </h2>
         <p className="text-lg md:text-xl lg:text-2xl font-semibold text-[#BFBFBF] leading-[120%] cursor-pointer hover:text-white hover:underline">
           See All
@@ -105,7 +106,7 @@ const FamilyMovie = ({
           spaceBetween={12}
           className="w-full h-full"
         >
-          {data?.map((blog, index) => (
+          {movies?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
               <MovieCart blog={blog} />
             </SwiperSlide>

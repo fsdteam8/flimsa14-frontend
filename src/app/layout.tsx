@@ -6,6 +6,8 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "video-react/dist/video-react.css";
 import AuthProvider from "@/components/provider/AuthProvider";
+import "video.js/dist/video-js.css";
+
 
 const manrope = Manrope({
   subsets: ["latin"],

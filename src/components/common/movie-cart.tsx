@@ -1,24 +1,26 @@
 "use client";
-// import { movieDataType } from "@/app/_components/movie-data-type";
 import React, { useState } from "react";
-import { ContentItem } from "../types/home-page-all-data-type";
 import ViewDetails from "@/app/_components/view-details";
+import { Movie } from "../types/home-page-update-data-type";
 
-const MovieCart = ({ blog }: { blog: ContentItem }) => {
+const MovieCart = ({ blog }: { blog: Movie }) => {
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedVideoId, setSelectedVideoId] = useState<number | null>(null);
+  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  console.log(blog)
+  console.log(blog?.title)
+
 
   return (
     <div>
       <div
         onClick={() => {
           setIsOpen(true);
-          setSelectedVideoId(blog?.id || null);
+          setSelectedVideoId(blog?._id || null);
         }}
         className="relative"
       >
         <div
-          style={{ backgroundImage: `url(${blog?.image})` }}
+          style={{ backgroundImage: `url(${blog?.thumbnailUrl})` }}
           className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
         ></div>
         <div className="absolute bottom-3 right-0 left-0">
@@ -26,7 +28,7 @@ const MovieCart = ({ blog }: { blog: ContentItem }) => {
             {blog?.title}
           </h5>
           <p className="text-base md:text-lg font-medium leading-[120%] text-white text-center pt-1">
-          {blog?.genre_name || "Genre Not Available"}
+          {blog?.genre[0]?.title || "Genre Not Available"}
         </p>
         </div>
       </div>
