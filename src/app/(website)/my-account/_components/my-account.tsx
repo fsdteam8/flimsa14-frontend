@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import React from "react";
 import AccountInfo from "./account-info";
+import History from "./history";
 
 const MyAccount = () => {
   const { data: session } = useSession();
@@ -31,8 +32,9 @@ const MyAccount = () => {
   });
 
   return (
-    <div>
+    <div className="space-y-8">
       <AccountInfo accountInfo={accountInfo} isLoading={isLoading} />
+      <History />
     </div>
   );
 };
