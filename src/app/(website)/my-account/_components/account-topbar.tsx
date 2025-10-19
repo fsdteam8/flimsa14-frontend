@@ -39,7 +39,7 @@ const AccountTopBar = () => {
   ];
 
   return (
-    <div className="mt-8 mb-5 container">
+    <div className="mt-8 mb-8 container">
       <h1 className="text-center text-3xl md:text-5xl font-medium text-white mb-6 md:mb-10">
         Accounts
       </h1>
