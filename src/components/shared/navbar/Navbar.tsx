@@ -37,13 +37,15 @@ const Navbar = () => {
       <div className="container w-full flex items-center justify-between py-2 lg:py-3 px-6 md:px-8 lg:px-10 ">
         {/* logo  */}
         <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
-          <Image
-            src="/assets/images/logo.svg"
-            alt="Logo"
-            width={113}
-            height={40}
-            className="w-full h-auto object-cover cursor-pointer"
-          />
+          <Link href={"/"}>
+            <Image
+              src="/assets/images/logo.svg"
+              alt="Logo"
+              width={113}
+              height={40}
+              className="w-full h-auto object-cover cursor-pointer"
+            />
+          </Link>
           <nav className="hidden md:block">
             <ul className="flex items-center gap-4 md:gap-6 lg:gap-8">
               {menuItemsData?.map((item) => {
@@ -76,9 +78,11 @@ const Navbar = () => {
                     <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
                   </DropdownMenuTrigger>
                   <DropdownMenuContent className="bg-white mt-3">
-                    <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
-                      My Account
-                    </DropdownMenuItem>
+                    <Link href={"/my-account"}>
+                      <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
+                        My Account
+                      </DropdownMenuItem>
+                    </Link>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem
                       onClick={() => signOut({ callbackUrl: "/" })}
