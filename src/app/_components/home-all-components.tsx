@@ -22,7 +22,6 @@ const HomeAllComponents = () => {
     return <div>Error: {error?.message}</div>;
   }
 
-  console.log(data?.data?.genreWiseMovies);
   const moviesByGenre = data?.data?.genreWiseMovies || [];
   return (
     <div className="">

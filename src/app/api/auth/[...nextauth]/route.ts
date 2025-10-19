@@ -1,13 +1,15 @@
-import NextAuth from "next-auth";
+import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { JWT } from "next-auth/jwt";
+import type { JWT } from "next-auth/jwt";
+import type { Session, User } from "next-auth";
 
-const handler = NextAuth({
+export const authOptions: NextAuthOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
     maxAge: 30 * 24 * 60 * 60, // 30 days
   },
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
@@ -21,17 +23,14 @@ const handler = NextAuth({
         }
 
         try {
-          const res = await fetch(
-            `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/login`,
-            {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                email: credentials.email,
-                password: credentials.password,
-              }),
-            }
-          );
+          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              email: credentials.email,
+              password: credentials.password,
+            }),
+          });
 
           const response = await res.json();
           console.log("API Response:", response);
@@ -40,14 +39,18 @@ const handler = NextAuth({
             throw new Error(response?.message || "Login failed");
           }
 
-          // Extract correct fields from response
-          const { accessToken, refreshToken, user, role, _id } = response.data;
+          // ✅ Adjust this based on your actual API response shape
+          const { accessToken, refreshToken, user } = response.data;
+
+          if (!accessToken || !user) {
+            throw new Error("Invalid login response");
+          }
 
           return {
-            id: _id,
+            id: user?._id,
             name: user?.name,
             email: user?.email,
-            role: role || user?.role,
+            role: user?.role,
             imageLink: user?.avatar?.url || "",
             accessToken,
             refreshToken,
@@ -65,36 +68,38 @@ const handler = NextAuth({
   ],
 
   callbacks: {
-    // Handle JWT (server-side)
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async jwt({ token, user }: { token: JWT; user?: any }) {
+    // 🔹 Save custom fields in JWT
+    async jwt({ token, user }: { token: JWT; user?: User }) {
       if (user) {
-        token.id = user.id;
-        token.name = user.name;
-        token.email = user.email;
-        token.role = user.role;
-        token.imageLink = user.imageLink;
-        token.accessToken = user.accessToken;
-        token.refreshToken = user.refreshToken;
+        Object.assign(token, {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          imageLink: user.imageLink,
+          accessToken: user.accessToken,
+          refreshToken: user.refreshToken,
+        });
       }
       return token;
     },
 
-    // Handle Session (client-side)
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    async session({ session, token }: { session: any; token: JWT }) {
+    // 🔹 Make custom fields available in session
+    async session({ session, token }: { session: Session; token: JWT }) {
       session.user = {
-        id: token.id,
+        id: token.id as string,
         name: token.name,
         email: token.email,
-        role: token.role,
-        imageLink: token.imageLink,
-        accessToken: token.accessToken,
-        refreshToken: token.refreshToken,
+        role: token.role as string,
+        imageLink: token.imageLink as string,
+        accessToken: token.accessToken as string,
+        refreshToken: token.refreshToken as string,
       };
       return session;
     },
   },
-});
+};
+
+const handler = NextAuth(authOptions);
 
 export { handler as GET, handler as POST };

@@ -24,7 +24,6 @@ const Navbar = () => {
   const session = useSession();
   // const token = (session?.data?.user as { accessToken: string })?.accessToken;
   const user = session?.data?.user;
-  console.log(user);
   const menuItemsData = [
     { id: 1, title: "Comedy", link: "/" },
     { id: 2, title: "Action", link: "/" },

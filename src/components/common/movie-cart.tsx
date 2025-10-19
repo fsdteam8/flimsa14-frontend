@@ -6,8 +6,6 @@ import { Movie } from "../types/home-page-update-data-type";
 const MovieCart = ({ blog }: { blog: Movie }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-  console.log(blog)
-  console.log(blog?.title)
 
 
   return (
