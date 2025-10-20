@@ -5,6 +5,7 @@ import HeroSection from "./hero-section";
 import { MovieApiResponse } from "@/components/types/home-page-update-data-type";
 import ComedyClub from "./comedy-club";
 import FamilyMovie from "./family-movie";
+import Reels from "./reels";
 
 const HomeAllComponents = () => {
   const { data, isLoading, isError, error } = useQuery<MovieApiResponse>({
@@ -76,6 +77,17 @@ const HomeAllComponents = () => {
       <section>
         {moviesByGenre?.length > 0 && (
           <FamilyMovie
+            isLoading={isLoading}
+            isError={isError}
+            error={error ?? new Error("Unknown error")}
+            data={moviesByGenre || []}
+          />
+        )}
+      </section>
+
+      <section>
+        {moviesByGenre?.length > 0 && (
+          <Reels
             isLoading={isLoading}
             isError={isError}
             error={error ?? new Error("Unknown error")}
