@@ -30,6 +30,7 @@ const Navbar = () => {
     { id: 3, title: "Mystery", link: "/" },
     { id: 4, title: "Drama", link: "/" },
     { id: 5, title: `TV Shows`, link: "/" },
+    { id: 5, title: `Reels`, link: "/reels" },
   ];
   return (
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
