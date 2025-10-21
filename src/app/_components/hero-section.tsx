@@ -1,7 +1,3 @@
-
-
-
-
 "use client";
 
 import React, { useRef } from "react";
@@ -15,6 +11,8 @@ import { Autoplay, Pagination } from "swiper/modules";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import "swiper/css/pagination";
+import { Movie } from "@/components/types/home-page-update-data-type";
+import moment from "moment";
 
 const breakpoints = {
   0: {
@@ -34,45 +32,10 @@ const breakpoints = {
     spaceBetween: 10,
   },
 };
-
-export interface movieDataType {
-  id: number;
-  title: string;
-  img: string;
-  cast: string;
-  director: string;
-  rleaseDate: string;
-}
-
-const cartData: movieDataType[] = [
-  {
-    id: 1,
-    title: "Gangubai kathiawadi",
-    img: "/assets/images/hero1.png",
-    cast: "Alia Bhatt",
-    director: "Sanjay Leela Bhansali",
-    rleaseDate: "25 February 2026",
-  },
-  {
-    id: 2,
-    title: "Movie 2",
-    img: "/assets/images/hero1.png",
-    cast: "Cast of Movie 2",
-    director: "Director of Movie 2",
-    rleaseDate: "25 May 2026",
-  },
-  {
-    id: 3,
-    title: "Movie 3",
-    img: "/assets/images/hero1.png",
-    cast: "Cast of Movie 3",
-    director: "Director of Movie 3",
-    rleaseDate: "25 Merge 2026",
-  },
-];
-const HeroSection = () => {
+const HeroSection = ({ data }: { data: Movie[] }) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
+  console.log(data);
   return (
     <div className="">
       <Swiper
@@ -94,10 +57,10 @@ const HeroSection = () => {
         spaceBetween={12}
         className="w-full h-full custom-swiper"
       >
-        {cartData?.map((blog, index) => (
+        {data?.slice(0, 4)?.map((blog, index) => (
           <SwiperSlide key={index} className="!h-auto !md:h-full">
             <div
-              style={{ backgroundImage: `url(${blog?.img})` }}
+              style={{ backgroundImage: `url(${blog?.thumbnailUrl})` }}
               className="bg-cover bg-center bg-no-repeat h-[450px] md:h-[550px] lg:h-[680px] w-full object-cover"
             >
               <div className="container">
@@ -106,13 +69,13 @@ const HeroSection = () => {
                     {blog?.title}
                   </h1>
                   <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
-                    Cast: {blog?.cast}
+                    Cast: {blog?.cast.join(" ")}
                   </p>
                   <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%] py-2">
-                    Director: {blog?.director}
+                    Director: {blog?.directors.join(", ")}
                   </p>
                   <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
-                    Rlease: {blog?.rleaseDate}
+                    Release: {moment(blog?.releaseDate).format("MMMM D, YYYY")}
                   </p>
                 </div>
               </div>

@@ -24,10 +24,12 @@ const HomeAllComponents = () => {
   }
 
   const moviesByGenre = data?.data?.genreWiseMovies || [];
+  const heroMoviesData = data?.data?.movies || [];
+  // console.log(data?.data?.movies)
   return (
     <div className="">
       <section className="">
-        <HeroSection />
+        <HeroSection data={heroMoviesData}/>
       </section>
 
       {/* <section>
