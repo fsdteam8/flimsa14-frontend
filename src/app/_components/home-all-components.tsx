@@ -6,6 +6,7 @@ import { MovieApiResponse } from "@/components/types/home-page-update-data-type"
 import ComedyClub from "./comedy-club";
 import FamilyMovie from "./family-movie";
 import Reels from "./reels";
+import SeriesMovies from "./series-movies";
 
 const HomeAllComponents = () => {
   const { data, isLoading, isError, error } = useQuery<MovieApiResponse>({
@@ -29,7 +30,7 @@ const HomeAllComponents = () => {
   return (
     <div className="">
       <section className="">
-        <HeroSection data={heroMoviesData}/>
+        <HeroSection data={heroMoviesData} />
       </section>
 
       {/* <section>
@@ -96,6 +97,10 @@ const HomeAllComponents = () => {
             data={moviesByGenre || []}
           />
         )}
+      </section>
+
+      <section>
+        <SeriesMovies />
       </section>
 
       {/* <section>

@@ -1,14 +1,13 @@
 "use client";
 import React, { useState } from "react";
-import ViewDetails from "@/app/_components/view-details";
-import { Movie } from "../types/home-page-update-data-type";
+import { Series } from "@/app/_components/series-movies";
+import SeriesViewDetails from "@/app/_components/series-view-details";
 
-const MovieCart = ({ blog }: { blog: Movie }) => {
+const SeriesCart = ({ blog }: { blog: Series }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
-  console.log(blog)
-
+  console.log("Series Cart:", blog);
 
   return (
     <div>
@@ -20,7 +19,7 @@ const MovieCart = ({ blog }: { blog: Movie }) => {
         className="relative"
       >
         <div
-          style={{ backgroundImage: `url(${blog?.thumbnailUrl})` }}
+          style={{ backgroundImage: `url(${blog?.thumbnailUrl || "/assets/images/no-img-available.jpg"})` }}
           className="bg-cover bg-center bg-no-repeat h-[350px] w-full object-cover rounded-[14px] cursor-pointer"
         ></div>
         <div className="absolute bottom-3 right-0 left-0">
@@ -28,14 +27,14 @@ const MovieCart = ({ blog }: { blog: Movie }) => {
             {blog?.title}
           </h5>
           <p className="text-base md:text-lg font-medium leading-[120%] text-white text-center pt-1">
-          {blog?.genre[0]?.title || "Genre Not Available"}
-        </p>
+            {blog?.genre[0]?.title || "Genre Not Available"}
+          </p>
         </div>
       </div>
       {/* modal open  */}
       {isOpen && (
         <div>
-          <ViewDetails
+          <SeriesViewDetails
             open={isOpen}
             onOpenChange={() => setIsOpen(false)}
             videoId={selectedVideoId}
@@ -46,4 +45,4 @@ const MovieCart = ({ blog }: { blog: Movie }) => {
   );
 };
 
-export default MovieCart;
+export default SeriesCart;
