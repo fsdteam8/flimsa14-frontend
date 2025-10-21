@@ -13,6 +13,7 @@ import { Swiper, SwiperSlide } from "swiper/react";
 import { Swiper as SwiperCore } from "swiper/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SeriesCart from "@/components/common/series-cart";
+import Link from "next/link";
 
 const breakpoints = {
   0: {
@@ -96,7 +97,7 @@ export interface SeriesResponse {
 }
 
 const SeriesMovies = () => {
-    const swiperRef = useRef<SwiperCore | null>(null);
+  const swiperRef = useRef<SwiperCore | null>(null);
   const { data, isLoading, isError, error } = useQuery<SeriesResponse>({
     queryKey: ["all-series-movies"],
     queryFn: () =>
@@ -115,14 +116,17 @@ const SeriesMovies = () => {
     return <div>Error: {error?.message}</div>;
   }
   return (
-      <div className="container">
+    <div className="container">
       <div className="w-full flex items-center justify-between">
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
-         Series Movies
+          Series Movies
         </h2>
-        <p className="text-lg md:text-xl lg:text-2xl font-semibold text-[#BFBFBF] leading-[120%] cursor-pointer hover:text-white hover:underline">
+        <Link
+          href="/series"
+          className="text-lg md:text-xl lg:text-2xl font-semibold text-[#BFBFBF] leading-[120%] cursor-pointer hover:text-white hover:underline"
+        >
           See All
-        </p>
+        </Link>
       </div>
       <div className="w-full flex items-center relative">
         {seriesMoviesData?.length > 4 && (
@@ -151,7 +155,7 @@ const SeriesMovies = () => {
         >
           {seriesMoviesData?.map((blog, index) => (
             <SwiperSlide key={index} className="!h-auto !md:h-full py-4">
-              <SeriesCart blog={blog } />
+              <SeriesCart blog={blog} />
             </SwiperSlide>
           ))}
         </Swiper>
