@@ -26,15 +26,15 @@ const AccountTopBar = () => {
     },
     {
       label: "Wishlist",
-      path: "/wishlist",
+      path: "/my-account/wishlist",
     },
     {
       label: "Privacy Policy",
-      path: "/privacy-policy",
+      path: "/my-account/privacy-policy",
     },
     {
       label: "Terms & Conditions",
-      path: "/privacy-policy",
+      path: "/my-account/terms-conditions",
     },
   ];
 
