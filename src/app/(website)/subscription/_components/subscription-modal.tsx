@@ -1,135 +1,247 @@
-// import React from "react";
-
-// const SubscriptionModal = () => {
-//   return (
-//     <div className="px-3 md:px-0">
-//       <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/10 backdrop-blur-[10px] ">
-//        <h2 className="text-2xl md:text-3xl lg:text-[40px] text-white font-semibold leading-[120%] text-center">Subscription</h2>
-//        <p className="text-base md:text-lg lg:text-xl font-normal text-white leading-[120%] text-center pt-1">Enjoy watching Full-HD anime, without <br />
-// restrictions and without ads</p>
-//       </div>
-//     </div>
-//   );
-// };
-
-// export default SubscriptionModal;
 
 
 "use client";
 
-import { useState } from "react";
-import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { Check } from "lucide-react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import { useSession } from "next-auth/react";
+import { toast } from "react-toastify";
+import { Elements } from "@stripe/react-stripe-js";
+import { StripePaymentModal } from "@/components/StripePaymentModal";
 import { loadStripe } from "@stripe/stripe-js";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
-console.log(stripePromise)
 
-const plans = [
-  {
-    id: "basic",
-    price: 2.99,
-    title: "$2.99 / month",
-    features: [
-      "Watch all you want",
-      "Allows streaming of 4K",
-      "Better video & audio quality",
-    ],
-  },
-  {
-    id: "premium",
-    price: 4.99,
-    title: "$4.99 / month",
-    features: [
-      "Watch all you want, ad-free",
-      "Allows streaming of 4K",
-      "Best video & audio quality",
-    ],
-  },
-];
+export interface Plan {
+  _id: string;
+  name: string;
+  price: number;
+  features: string[];
+  isActive: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface PlansResponse {
+  success: boolean;
+  message: string;
+  data: Plan[];
+}
 
 export default function SubscriptionModal() {
-  const [selectedPlan, setSelectedPlan] = useState(plans[0]);
+  const session = useSession();
+  const token = session.data?.user?.accessToken;
+  // console.log(token);
+  const { data, isLoading, error, isError } = useQuery<PlansResponse>({
+    queryKey: ["plans"],
+    queryFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/plans`);
+      if (!res.ok) throw new Error("Network response was not ok");
+      return res.json();
+    },
+  });
 
-  const handleCheckout = async () => {
-    // const stripe = await stripePromise;
-    // // Call your backend to create Stripe Checkout session
-    // const res = await fetch("/api/stripe/checkout", {
-    //   method: "POST",
-    //   headers: { "Content-Type": "application/json" },
-    //   body: JSON.stringify({ planId: selectedPlan.id }),
-    // });
-    // const session = await res.json();
-    // await stripe?.redirectToCheckout({ sessionId: session.id });
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
+  const [payWithStripe, setPayWithStripe] = useState(false);
+   const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
+    useState("");
+  const [showStripeModal, setShowStripeModal] = useState(false);
+  console.log(showStripeModal)
+
+  console.log(paymentIntentClientSecret)
+
+  // Set the default plan when data is loaded
+  useEffect(() => {
+    if (data?.data?.length) {
+      setSelectedPlanId(data.data[0]._id);
+      setSelectedPlan(data.data[0]);
+    }
+  }, [data]);
+
+  const handlePlanChange = (planId: string) => {
+    setSelectedPlanId(planId);
+    const plan = data?.data.find((p) => p._id === planId);
+    setSelectedPlan(plan || null);
   };
 
-  return (
-    <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        className="bg-neutral-900 text-white rounded-2xl shadow-xl p-6 w-full max-w-md"
-      >
-        <h2 className="text-2xl font-bold text-center mb-2">Subscription</h2>
-        <p className="text-sm text-gray-400 text-center mb-6">
-          Enjoy watching Full-HD anime without restrictions and ads.
-        </p>
+  // payment create api integration
+  const { mutate: createPayment, isPending } = useMutation({
+    mutationKey: ["create-payment"],
+    mutationFn: async (data: { planId: string; price: number }) => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/create-payment-intent`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(data),
+        }
+      );
+      if (!res.ok) throw new Error("Network response was not ok");
+      return res.json();
+    },
+    onSuccess : (data) => {
+      if(!data?.success){
+        toast.error(data?.message || "Failed to create payment intent");
+        return;
+      }
+      toast.success(data?.message || "Payment intent created successfully");
+      setPaymentIntentClientSecret(data?.data?.transactionId || "");
+      setShowStripeModal(true);
+    }
+  });
 
-        <div className="space-y-3 mb-4">
-          {plans.map((plan) => (
-            <Card
-              key={plan.id}
-              onClick={() => setSelectedPlan(plan)}
-              className={`cursor-pointer transition-all ${
-                selectedPlan.id === plan.id
-                  ? "border border-blue-500 bg-blue-950/30"
-                  : "bg-neutral-800 hover:bg-neutral-700"
+
+    // ---------- Confirm Payment API ----------
+  const confirmPaymentMutation = useMutation({
+    mutationKey: ["confirm-payment"],
+    mutationFn: (paymentIntentId: string) =>
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/confirm-payment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ paymentIntentId }),
+      }).then((res) => res.json()),
+    onSuccess: (data) => {
+      if (data.success) {
+        toast.success("Payment confirmed!");
+        setShowStripeModal(false);
+      } else {
+        toast.error(data.message || "Payment confirmation failed");
+      }
+    },
+  });
+
+
+  const handlePayment = () => {
+    createPayment({
+      planId: selectedPlanId!,
+      price: selectedPlan!.price,
+    })
+  }
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-white">
+        Loading plans...
+      </div>
+    );
+  }
+
+  if (isError) {
+    return (
+      <div className="flex justify-center items-center min-h-screen text-red-400">
+        Failed to load plans: {error.message}
+      </div>
+    );
+  }
+
+  const subtotal = selectedPlan?.price || 0;
+  const tax = 0;
+  const total = subtotal + tax;
+
+  return (
+    <div className="flex justify-center items-center h-screen bg-cover bg-center relative">
+      {/* Background Overlay */}
+      {/* <div className="absolute inset-0 bg-[url('/your-background.jpg')] bg-cover bg-center opacity-30 -z-10" /> */}
+
+      <div className="w-full max-w-md bg-black/60 backdrop-blur-md rounded-2xl shadow-xl p-6 space-y-6 border border-white/20">
+        {/* Header */}
+        <div className="text-center space-y-2">
+          <h2 className="text-2xl font-semibold text-white">Subscription</h2>
+          <p className="text-sm text-gray-300">
+            Enjoy watching Full-HD anime, without restrictions and without ads
+          </p>
+        </div>
+
+        {/* Plans */}
+        <div className="space-y-4">
+          {data?.data?.map((plan) => (
+            <div
+              key={plan._id}
+              onClick={() => handlePlanChange(plan._id)}
+              className={`cursor-pointer rounded-xl border p-5 transition-all ${
+                selectedPlanId === plan._id
+                  ? "border-white bg-white/10"
+                  : "border-gray-600 hover:border-white/50"
               }`}
             >
-              <CardContent className="p-4">
-                <h3 className="text-lg font-semibold text-center">{plan.title}</h3>
-                <ul className="mt-2 space-y-1 text-sm text-gray-300">
-                  {plan.features.map((f) => (
-                    <li key={f} className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-400" />
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </CardContent>
-            </Card>
+              <p className="text-3xl font-semibold text-white">
+                ${plan.price}
+                <span className="text-base font-normal text-gray-300">
+                  /month
+                </span>
+              </p>
+              <ul className="mt-3 space-y-2 text-gray-300 text-sm">
+                {plan.features.map((feature, i) => (
+                  <li key={i} className="flex items-start gap-2">
+                    <Check className="w-4 h-4 text-green-400 mt-[2px]" />
+                    {feature}
+                  </li>
+                ))}
+              </ul>
+            </div>
           ))}
         </div>
 
-        <div className="border-t border-neutral-700 pt-3 text-sm text-gray-300 space-y-1">
+        {/* Subtotal */}
+        <div className="space-y-2 text-gray-200 text-sm">
           <div className="flex justify-between">
             <span>Subtotal</span>
-            <span>${selectedPlan.price.toFixed(2)}</span>
+            <span>${subtotal.toFixed(2)}</span>
           </div>
           <div className="flex justify-between">
             <span>Tax</span>
-            <span>$0.00</span>
+            <span>${tax.toFixed(2)}</span>
           </div>
-          <div className="flex justify-between font-semibold text-white">
+          <div className="flex justify-between text-white font-semibold">
             <span>Total</span>
-            <span>${selectedPlan.price.toFixed(2)}</span>
+            <span>${total.toFixed(2)}</span>
           </div>
         </div>
 
-        <Button
-          onClick={handleCheckout}
-          className="w-full mt-5 bg-blue-600 hover:bg-blue-700"
+        {/* Pay with Stripe button */}
+        <button
+          onClick={() => setPayWithStripe(!payWithStripe)}
+          className={`w-full flex justify-between items-center px-5 py-3 rounded-xl border text-white transition-all ${
+            payWithStripe
+              ? "border-[#635bff] bg-[#635bff]/20"
+              : "border-gray-600 bg-transparent hover:border-[#635bff]"
+          }`}
         >
-          Pay With Stripe
-        </Button>
+          <span className="font-medium">Pay With Stripe</span>
+          <span className="text-sm text-[#635bff] font-semibold">stripe</span>
+        </button>
 
-        <Button variant="secondary" className="w-full mt-2" onClick={() => alert("Continue clicked")}>
-          Continue
+        {/* Continue Button */}
+        <Button
+          onClick={handlePayment}
+          disabled={isPending || !selectedPlan}
+          className="w-full mt-2 rounded-full bg-white text-black font-semibold hover:bg-gray-200"
+        >
+          {isPending ? "Processing..." : "Continue to Payment"}
         </Button>
-      </motion.div>
+      </div>
+
+      {/* ---------- Stripe Modal ---------- */}
+      {showStripeModal && paymentIntentClientSecret && (
+        <Elements
+          stripe={stripePromise}
+          options={{ clientSecret: paymentIntentClientSecret }}
+        >
+          <StripePaymentModal
+            open={showStripeModal}
+            onClose={() => setShowStripeModal(false)}
+            clientSecret={paymentIntentClientSecret}
+            onConfirm={confirmPaymentMutation.mutate}
+            amount={total}
+          />
+        </Elements>
+      )}
     </div>
   );
 }
-
