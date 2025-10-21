@@ -39,7 +39,7 @@ const ViewDetails = ({
     <div>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="bg-white p-2">
-          <div className="p-2 ">
+          <div className="p-2">
             <VideoPlayer
               src={data?.data?.videoUrl || ""}
               poster={data?.data?.thumbnailUrl || ""}
