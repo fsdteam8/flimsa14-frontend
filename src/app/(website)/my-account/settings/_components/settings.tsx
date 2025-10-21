@@ -3,6 +3,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import React from "react";
 import UpdateAccountInfo from "./update-account-info";
+import PasswordUpdateForm from "./password-update-form";
 
 const Settings = () => {
   const { data: session } = useSession();
@@ -30,8 +31,9 @@ const Settings = () => {
   });
 
   return (
-    <div className="bg-black/35 w-full p-5 rounded-lg flex gap-5 items-center">
+    <div className="space-y-10">
       <UpdateAccountInfo accountInfo={accountInfo} isLoading={isLoading} />
+      <PasswordUpdateForm />
     </div>
   );
 };

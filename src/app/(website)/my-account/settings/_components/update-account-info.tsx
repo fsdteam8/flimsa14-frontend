@@ -147,7 +147,7 @@ const UpdateAccountInfo = ({ accountInfo, isLoading }: Props) => {
   }
 
   return (
-    <div>
+    <div className="bg-black/35 w-full p-5 rounded-lg">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
           <div className="flex items-center gap-6">
