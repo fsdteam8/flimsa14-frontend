@@ -1,9 +1,10 @@
 import React from "react";
+import Settings from "./_components/settings";
 
 const page = () => {
   return (
     <div className="text-white container min-h-[calc(100vh-500px)]">
-      this is settings
+      <Settings />
     </div>
   );
 };
