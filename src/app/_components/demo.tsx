@@ -11,6 +11,7 @@ export default function DemoVideo() {
           poster="/path/to/thumbnail.jpg" // Optional: Add a thumbnail URL
           title="Episode 3 Video"
           className="mx-auto"
+          movieId="1760502635240"
         />
       </div>
     </div>

@@ -1,24 +1,28 @@
-'use client';
+"use client";
 
-import React, { useRef, useEffect, useState } from 'react';
-import Hls from 'hls.js';
+import React, { useRef, useEffect, useState } from "react";
+import Hls from "hls.js";
+import { useSession } from "next-auth/react";
 
 interface VideoPlayerProps {
   src: string;
   poster?: string;
   title?: string;
   className?: string;
+  movieId: string;
 }
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   src,
-  poster = '',
-  title = 'Video Player',
-  className = '',
+  poster = "",
+  title = "Video Player",
+  className = "",
+  movieId,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const hlsRef = useRef<Hls | null>(null);
+  const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -29,29 +33,31 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const [levels, setLevels] = useState<any[]>([]);
   const [currentLevel, setCurrentLevel] = useState(-1); // -1 for Auto
   const [volume, setVolume] = useState(1);
+  const session = useSession();
+  const token = session.data?.user?.accessToken;
 
   // Available quality levels
   const qualityLabels: { [key: number]: string } = {
-    '-1': 'Auto',
-    360: '360p',
-    480: '480p',
-    720: '720p',
-    1080: '1080p',
+    "-1": "Auto",
+    360: "360p",
+    480: "480p",
+    720: "720p",
+    1080: "1080p",
   };
 
   // Format time helper
   const formatTime = (sec: number) => {
-    if (isNaN(sec)) return '0:00';
+    if (isNaN(sec)) return "0:00";
     const m = Math.floor(sec / 60);
     const s = Math.floor(sec % 60);
-    return `${m}:${s < 10 ? '0' + s : s}`;
+    return `${m}:${s < 10 ? "0" + s : s}`;
   };
 
   // HLS Setup with Enhanced Error Handling
   useEffect(() => {
     const video = videoRef.current;
     if (!video) {
-      setError('Video element not found.');
+      setError("Video element not found.");
       setLoading(false);
       return;
     }
@@ -67,14 +73,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setIsMuted(video.muted);
     };
     const handleError = () => {
-      setError('Failed to load video. Please try again.');
+      setError("Failed to load video. Please try again.");
       setLoading(false);
     };
 
-    video.addEventListener('timeupdate', handleTimeUpdate);
-    video.addEventListener('loadedmetadata', handleLoadedMetadata);
-    video.addEventListener('volumechange', handleVolumeChange);
-    video.addEventListener('error', handleError);
+    video.addEventListener("timeupdate", handleTimeUpdate);
+    video.addEventListener("loadedmetadata", handleLoadedMetadata);
+    video.addEventListener("volumechange", handleVolumeChange);
+    video.addEventListener("error", handleError);
 
     if (Hls.isSupported()) {
       const hls = new Hls({
@@ -107,18 +113,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         });
 
         hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error('HLS Error:', data);
-          let errorMessage = 'An error occurred while loading the video.';
+          console.error("HLS Error:", data);
+          let errorMessage = "An error occurred while loading the video.";
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                errorMessage = 'Network error. Please check your connection and try again.';
+                errorMessage =
+                  "Network error. Please check your connection and try again.";
                 break;
               case Hls.ErrorTypes.MEDIA_ERROR:
-                errorMessage = 'Media error. The video format may be unsupported.';
+                errorMessage =
+                  "Media error. The video format may be unsupported.";
                 break;
               default:
-                errorMessage = 'An unexpected error occurred.';
+                errorMessage = "An unexpected error occurred.";
             }
             hls.destroy();
             hlsRef.current = null;
@@ -127,63 +135,133 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setLoading(false);
         });
       } catch (err) {
-        console.error('HLS Setup Error:', err);
-        setError('Failed to initialize video player.');
+        console.error("HLS Setup Error:", err);
+        setError("Failed to initialize video player.");
         setLoading(false);
       }
 
       return () => {
-        video.removeEventListener('timeupdate', handleTimeUpdate);
-        video.removeEventListener('loadedmetadata', handleLoadedMetadata);
-        video.removeEventListener('volumechange', handleVolumeChange);
-        video.removeEventListener('error', handleError);
+        video.removeEventListener("timeupdate", handleTimeUpdate);
+        video.removeEventListener("loadedmetadata", handleLoadedMetadata);
+        video.removeEventListener("volumechange", handleVolumeChange);
+        video.removeEventListener("error", handleError);
         if (hlsRef.current) {
           hlsRef.current.destroy();
           hlsRef.current = null;
         }
       };
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+    } else if (video.canPlayType("application/vnd.apple.mpegurl")) {
       // Native HLS support (e.g., Safari)
       video.src = src;
-      video.addEventListener('loadedmetadata', () => {
+      video.addEventListener("loadedmetadata", () => {
         setLoading(false);
         // Native HLS doesn't provide quality levels, so disable quality selector
         setLevels([]);
       });
-      video.addEventListener('error', () => {
-        setError('Failed to load video in this browser.');
+      video.addEventListener("error", () => {
+        setError("Failed to load video in this browser.");
         setLoading(false);
       });
     } else {
-      setError('Your browser does not support HLS playback.');
+      setError("Your browser does not support HLS playback.");
       setLoading(false);
     }
   }, [src]);
 
+  // update code start
+  // ✅ Send history progress to API every 5s
+  const sendHistory = async () => {
+    if (!videoRef.current || !duration || !movieId) return;
+    const progress = Math.round(
+      (videoRef.current.currentTime / duration) * 100
+    );
+
+    try {
+      await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/history`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({ movieId, progress }),
+      });
+      console.log("History updated:", progress);
+    } catch (err) {
+      console.error("History update failed:", err);
+    }
+  };
+
   // Play/Pause Toggle
+  // const togglePlay = () => {
+  //   if (!videoRef.current) return;
+  //   try {
+  //     if (isPlaying) {
+  //       videoRef.current.pause();
+  //     } else {
+  //       videoRef.current.play().catch(() => setError('Playback failed. Please try again.'));
+  //     }
+  //     setIsPlaying(!isPlaying);
+  //   } catch (err) {
+  //     console.error('Play/Pause Error:', err);
+  //     setError('Unable to control playback.');
+  //   }
+  // };
+
+  // ✅ Play/Pause Toggle
   const togglePlay = () => {
     if (!videoRef.current) return;
     try {
       if (isPlaying) {
         videoRef.current.pause();
+        if (intervalRef.current) clearInterval(intervalRef.current);
       } else {
-        videoRef.current.play().catch(() => setError('Playback failed. Please try again.'));
+        videoRef.current
+          .play()
+          .then(() => {
+            intervalRef.current = setInterval(sendHistory, 5000);
+          })
+          .catch(() => setError("Playback failed. Please try again."));
       }
       setIsPlaying(!isPlaying);
     } catch (err) {
-      console.error('Play/Pause Error:', err);
-      setError('Unable to control playback.');
+      console.error("Play/Pause Error:", err);
+      setError("Unable to control playback.");
     }
   };
 
+  // ✅ Stop interval when paused or ended
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const handlePause = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+
+    const handleEnded = () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+      sendHistory(); // final save
+    };
+
+    video.addEventListener("pause", handlePause);
+    video.addEventListener("ended", handleEnded);
+
+    return () => {
+      video.removeEventListener("pause", handlePause);
+      video.removeEventListener("ended", handleEnded);
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [duration]);
+
+  // update code end
   // Mute/Unmute Toggle
   const toggleMute = () => {
     if (!videoRef.current) return;
     try {
       videoRef.current.muted = !videoRef.current.muted;
     } catch (err) {
-      console.error('Mute Error:', err);
-      setError('Unable to control volume.');
+      console.error("Mute Error:", err);
+      setError("Unable to control volume.");
     }
   };
 
@@ -195,8 +273,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       videoRef.current.volume = newVol;
       videoRef.current.muted = newVol === 0;
     } catch (err) {
-      console.error('Volume Change Error:', err);
-      setError('Unable to adjust volume.');
+      console.error("Volume Change Error:", err);
+      setError("Unable to adjust volume.");
     }
   };
 
@@ -207,8 +285,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       const newTime = parseFloat(e.target.value);
       videoRef.current.currentTime = newTime;
     } catch (err) {
-      console.error('Seek Error:', err);
-      setError('Unable to seek video.');
+      console.error("Seek Error:", err);
+      setError("Unable to seek video.");
     }
   };
 
@@ -216,11 +294,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const skip = (seconds: number) => {
     if (!videoRef.current || !duration) return;
     try {
-      const newTime = Math.max(0, Math.min(duration, videoRef.current.currentTime + seconds));
+      const newTime = Math.max(
+        0,
+        Math.min(duration, videoRef.current.currentTime + seconds)
+      );
       videoRef.current.currentTime = newTime;
     } catch (err) {
-      console.error('Skip Error:', err);
-      setError('Unable to skip video.');
+      console.error("Skip Error:", err);
+      setError("Unable to skip video.");
     }
   };
 
@@ -231,8 +312,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       hlsRef.current.currentLevel = level;
       setCurrentLevel(level);
     } catch (err) {
-      console.error('Quality Change Error:', err);
-      setError('Unable to change video quality.');
+      console.error("Quality Change Error:", err);
+      setError("Unable to change video quality.");
     }
   };
 
@@ -246,8 +327,8 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         containerRef.current.requestFullscreen();
       }
     } catch (err) {
-      console.error('Fullscreen Error:', err);
-      setError('Unable to toggle fullscreen.');
+      console.error("Fullscreen Error:", err);
+      setError("Unable to toggle fullscreen.");
     }
   };
 
@@ -333,28 +414,60 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       >
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <span className="text-white text-sm">{formatTime(currentTime)} / {formatTime(duration)}</span>
+            <span className="text-white text-sm">
+              {formatTime(currentTime)} / {formatTime(duration)}
+            </span>
             <button
               onClick={() => skip(-10)}
               className="p-2 text-white hover:text-blue-400"
               aria-label="Skip backward 10 seconds"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 19l-7-7 7-7"
+                />
               </svg>
             </button>
             <button
               onClick={togglePlay}
               className="p-3 text-white hover:text-blue-400"
-              aria-label={isPlaying ? 'Pause video' : 'Play video'}
+              aria-label={isPlaying ? "Pause video" : "Play video"}
             >
               {isPlaying ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 9v6m4-6v6" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M10 9v6m4-6v6"
+                  />
                 </svg>
               ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 4v16l13-8z" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M7 4v16l13-8z"
+                  />
                 </svg>
               )}
             </button>
@@ -363,8 +476,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               className="p-2 text-white hover:text-blue-400"
               aria-label="Skip forward 10 seconds"
             >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M9 5l7 7-7 7"
+                />
               </svg>
             </button>
           </div>
@@ -374,10 +497,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             <button
               onClick={toggleMute}
               className="text-white hover:text-blue-400"
-              aria-label={isMuted || volume === 0 ? 'Unmute video' : 'Mute video'}
+              aria-label={
+                isMuted || volume === 0 ? "Unmute video" : "Mute video"
+              }
             >
               {isMuted || volume === 0 ? (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -386,7 +516,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   />
                 </svg>
               ) : (
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
                   <path
                     strokeLinecap="round"
                     strokeLinejoin="round"
@@ -436,7 +571,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               className="p-2 text-white hover:text-blue-400"
               aria-label="Toggle fullscreen"
             >
-              <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <svg
+                className="w-6 h-6"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
                 <path
                   strokeLinecap="round"
                   strokeLinejoin="round"
@@ -453,24 +593,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 };
 
 export default VideoPlayer;
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 // 'use client';
 

@@ -15,7 +15,11 @@ export const authOptions: NextAuthOptions = {
       name: "Credentials",
       credentials: {
         email: { label: "Email", type: "text", placeholder: "email" },
-        password: { label: "Password", type: "password", placeholder: "password" },
+        password: {
+          label: "Password",
+          type: "password",
+          placeholder: "password",
+        },
       },
       async authorize(credentials) {
         if (!credentials?.email || !credentials?.password) {
@@ -23,14 +27,17 @@ export const authOptions: NextAuthOptions = {
         }
 
         try {
-          const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/auth/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              email: credentials.email,
-              password: credentials.password,
-            }),
-          });
+          const res = await fetch(
+            `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/login`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                email: credentials.email,
+                password: credentials.password,
+              }),
+            }
+          );
 
           const response = await res.json();
           console.log("API Response:", response);
@@ -40,7 +47,9 @@ export const authOptions: NextAuthOptions = {
           }
 
           // ✅ Adjust this based on your actual API response shape
-          const { accessToken, refreshToken, user } = response.data;
+          const { accessToken, refreshToken, user, isPaid } = response.data;
+
+          console.log(isPaid, "isPaid data")
 
           if (!accessToken || !user) {
             throw new Error("Invalid login response");
@@ -51,6 +60,7 @@ export const authOptions: NextAuthOptions = {
             name: user?.name,
             email: user?.email,
             role: user?.role,
+            isPaid,
             imageLink: user?.avatar?.url || "",
             accessToken,
             refreshToken,
@@ -76,6 +86,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name as string,
           email: user.email as string,
           role: user.role as string,
+          isPaid: user.isPaid as boolean,
           imageLink: user.imageLink as string,
           accessToken: user.accessToken as string,
           refreshToken: user.refreshToken as string,
@@ -94,8 +105,11 @@ export const authOptions: NextAuthOptions = {
         imageLink: token.imageLink as string,
         accessToken: token.accessToken as string,
         refreshToken: token.refreshToken as string,
+        isPaid: token.isPaid as boolean,
       };
       return session;
     },
+
+    
   },
 };

@@ -87,6 +87,7 @@ const SeriesViewDetails = ({
               poster={data?.data?.thumbnailUrl || ""}
               title={data?.data?.title || "Movie Video"}
               className="mx-auto"
+              movieId={videoId || ""}
             />
           </div>
 

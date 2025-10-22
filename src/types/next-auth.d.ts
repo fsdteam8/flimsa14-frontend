@@ -10,6 +10,7 @@ declare module "next-auth" {
       imageLink?: string;
       accessToken: string;
       refreshToken: string;
+      isPaid: boolean;
     } & DefaultSession["user"];
   }
 
@@ -18,6 +19,7 @@ declare module "next-auth" {
     name: string;
     email: string;
     role: string;
+    isPaid: boolean;
     imageLink?: string;
     accessToken: string;
     refreshToken: string;
@@ -30,6 +32,7 @@ declare module "next-auth/jwt" {
     name: string;
     email: string;
     role: string;
+    isPaid: boolean;
     imageLink?: string;
     accessToken: string;
     refreshToken: string;
