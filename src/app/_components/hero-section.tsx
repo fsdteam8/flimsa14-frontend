@@ -60,8 +60,8 @@ const HeroSection = ({ data }: { data: Movie[] }) => {
         {data?.slice(0, 4)?.map((blog, index) => (
           <SwiperSlide key={index} className="!h-auto !md:h-full">
             <div
-              style={{ backgroundImage: `url(${blog?.thumbnailUrl})` }}
-              className="bg-cover bg-center bg-no-repeat h-[450px] md:h-[550px] lg:h-[680px] w-full object-cover"
+              style={{ backgroundImage: `url(${blog?.thumbnailUrl})`, backgroundBlendMode: "overlay" }}
+              className="bg-[#00000098] bg-cover bg-center bg-no-repeat h-[450px] md:h-[550px] lg:h-[680px] w-full object-cover"
             >
               <div className="container">
                 <div className="h-[450px] md:h-[550px] lg:h-[680px]  flex flex-col justify-end items-start pl-4 md:pl-14 lg:pl-20 pb-14 md:pb-16 lg:pb-16 xl:pb-20">

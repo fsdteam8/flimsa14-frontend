@@ -14,6 +14,7 @@ import { Swiper as SwiperCore } from "swiper/types";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import SeriesCart from "@/components/common/series-cart";
 import Link from "next/link";
+import { useSession } from "next-auth/react";
 
 const breakpoints = {
   0: {
@@ -98,6 +99,8 @@ export interface SeriesResponse {
 
 const SeriesMovies = () => {
   const swiperRef = useRef<SwiperCore | null>(null);
+  const session = useSession();
+  console.log(session?.data)
   const { data, isLoading, isError, error } = useQuery<SeriesResponse>({
     queryKey: ["all-series-movies"],
     queryFn: () =>

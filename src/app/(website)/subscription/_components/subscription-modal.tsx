@@ -1,5 +1,3 @@
-
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -46,12 +44,12 @@ export default function SubscriptionModal() {
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
   const [payWithStripe, setPayWithStripe] = useState(false);
-   const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
+  const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
     useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
-  console.log(showStripeModal)
+  // console.log(showStripeModal);
 
-  console.log(paymentIntentClientSecret)
+  // console.log(paymentIntentClientSecret);
 
   // Set the default plan when data is loaded
   useEffect(() => {
@@ -70,7 +68,7 @@ export default function SubscriptionModal() {
   // payment create api integration
   const { mutate: createPayment, isPending } = useMutation({
     mutationKey: ["create-payment"],
-    mutationFn: async (data: { planId: string; price: number }) => {
+    mutationFn: async (data: { planId: string }) => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/create-payment-intent`,
         {
@@ -85,44 +83,59 @@ export default function SubscriptionModal() {
       if (!res.ok) throw new Error("Network response was not ok");
       return res.json();
     },
-    onSuccess : (data) => {
-      if(!data?.success){
+    onSuccess: (data) => {
+      console.log("create payment", data);
+      if (!data?.success) {
         toast.error(data?.message || "Failed to create payment intent");
         return;
       }
       toast.success(data?.message || "Payment intent created successfully");
-      setPaymentIntentClientSecret(data?.data?.transactionId || "");
+      setPaymentIntentClientSecret(data?.data?.clientSecret || "");
       setShowStripeModal(true);
-    }
+    },
   });
 
-
-    // ---------- Confirm Payment API ----------
+  // ---------- Confirm Payment ----------
   const confirmPaymentMutation = useMutation({
     mutationKey: ["confirm-payment"],
-    mutationFn: (paymentIntentId: string) =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/confirm-payment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ paymentIntentId }),
-      }).then((res) => res.json()),
+    mutationFn: async ({
+      paymentIntentId,
+      paymentMethodId,
+    }: {
+      paymentIntentId: string;
+      paymentMethodId: string;
+    }) => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/confirm-payment`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ paymentIntentId, paymentMethodId }),
+        }
+      );
+      if (!res.ok) throw new Error("Failed to confirm payment");
+      return res.json();
+    },
     onSuccess: (data) => {
       if (data.success) {
-        toast.success("Payment confirmed!");
+        toast.success("Subscription payment successful!");
         setShowStripeModal(false);
       } else {
         toast.error(data.message || "Payment confirmation failed");
       }
     },
+    onError: () => {
+      toast.error("Something went wrong while confirming payment");
+    },
   });
 
-
   const handlePayment = () => {
-    createPayment({
-      planId: selectedPlanId!,
-      price: selectedPlan!.price,
-    })
-  }
+    if (!selectedPlanId) return toast.error("Please select a plan first");
+    createPayment({ planId: selectedPlanId });
+  };
 
   if (isLoading) {
     return (
@@ -237,7 +250,13 @@ export default function SubscriptionModal() {
             open={showStripeModal}
             onClose={() => setShowStripeModal(false)}
             clientSecret={paymentIntentClientSecret}
-            onConfirm={confirmPaymentMutation.mutate}
+            // onConfirm={confirmPaymentMutation.mutate}
+            onConfirm={(paymentIntentId, paymentMethodId) =>
+              confirmPaymentMutation.mutate({
+                paymentIntentId,
+                paymentMethodId,
+              })
+            }
             amount={total}
           />
         </Elements>

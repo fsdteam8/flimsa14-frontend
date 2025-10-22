@@ -53,7 +53,7 @@ const Navbar = () => {
                 return (
                   <li key={item.id} className=" text-white text-lg font-medium">
                     <Link
-                      className="whitespace-nowrap text-base md:text-[17px] lg:text-lg font-medium text-[#707070] leading-[120%] hover:underline hover:text-white"
+                      className="whitespace-nowrap text-base md:text-[17px] lg:text-lg font-medium text-white/80 leading-[120%] hover:underline hover:text-white"
                       href={`${item.link}`}
                     >
                       {" "}

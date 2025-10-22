@@ -1,7 +1,7 @@
-import React from "react";
+import React, { Suspense } from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { DialogDescription } from "@radix-ui/react-dialog";
-import { useQuery } from "@tanstack/react-query";
+import { useSuspenseQuery } from "@tanstack/react-query";
 import { SingleMovieResponse } from "@/components/types/view-details-page-data-type";
 import VideoPlayer from "@/components/video/VideoPlayer";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -17,12 +17,13 @@ const ViewDetails = ({
 }) => {
   console.log(`Video ID 4: ${videoId}`);
 
-  const { data, isLoading, isError, error } = useQuery<SingleMovieResponse>({
+  const { data, isLoading, isError, error } = useSuspenseQuery<SingleMovieResponse>({
     queryKey: ["single-movie", videoId],
     queryFn: () =>
       fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/movies/${videoId}`).then(
         (res) => res.json()
       ),
+      retry: 3,
   });
 
   console.log(data?.data);
@@ -40,12 +41,15 @@ const ViewDetails = ({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="bg-white p-2">
           <div className="p-2">
-            <VideoPlayer
-              src={data?.data?.videoUrl || ""}
-              poster={data?.data?.thumbnailUrl || ""}
-              title={data?.data?.title || "Movie Video"}
-              className="mx-auto"
-            />
+            <Suspense fallback={<div>Loading...</div>}>
+              <VideoPlayer
+                src={data?.data?.videoUrl || ""}
+                poster={data?.data?.thumbnailUrl || ""}
+                title={data?.data?.title || "Movie Video"}
+                className="mx-auto"
+                 movieId={data?.data?._id || ""}
+              />
+            </Suspense>
           </div>
 
           <ScrollArea className="h-[210px] rounded-md border p-2">

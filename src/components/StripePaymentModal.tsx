@@ -12,7 +12,7 @@ interface StripePaymentModalProps {
   open: boolean;
   onClose: () => void;
   clientSecret: string;
-  onConfirm: (paymentIntentId: string) => void;
+  onConfirm: (paymentIntentId: string, paymentMethodId: string) => void;
   amount: number;
 }
 
@@ -36,16 +36,19 @@ export const StripePaymentModal = ({
     if (result.error) {
       toast.error(result.error.message || "Payment failed");
     } else if (result.paymentIntent) {
-      toast.success("Payment successful!");
+      // toast.success("Payment successful!");
+      console.log(result, "result")
       const paymentIntentId = result.paymentIntent.id;
-      onConfirm(paymentIntentId);
+      const paymentMethodId = result.paymentIntent.payment_method as string;
+      // const paymentMethodId = "pm_card_visa";
+      onConfirm(paymentIntentId, paymentMethodId);
       // onClose();
     }
   };
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-[800px] mx-auto">
+      <DialogContent className="max-w-[800px] mx-auto bg-white">
         <p className="text-2xl md:text-[28px] lg:text-[32px] font-semibold text-black leading-[150%] text-center">
           Payment Details
         </p>
