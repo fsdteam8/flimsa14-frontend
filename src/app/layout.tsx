@@ -7,7 +7,7 @@ import "react-toastify/dist/ReactToastify.css";
 import "video-react/dist/video-react.css";
 import AuthProvider from "@/components/provider/AuthProvider";
 import "video.js/dist/video-js.css";
-
+import SocketProvider from "@/components/provider/SocketProvider";
 
 const manrope = Manrope({
   subsets: ["latin"],
@@ -30,8 +30,10 @@ export default function RootLayout({
       <body>
         <AuthProvider>
           <AppProvider>
-            {children}
-            <ToastContainer />
+            <SocketProvider>
+              {children}
+              <ToastContainer />
+            </SocketProvider>
           </AppProvider>
         </AuthProvider>
       </body>

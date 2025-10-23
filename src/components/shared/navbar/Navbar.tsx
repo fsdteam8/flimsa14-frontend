@@ -19,9 +19,15 @@ import {
 
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut, useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 
 const Navbar = () => {
   const session = useSession();
+  const router = useRouter();
+
+  const handleSearchClick = () => {
+    router.push("/search");
+  };
   // const token = (session?.data?.user as { accessToken: string })?.accessToken;
   const user = session?.data?.user;
   const menuItemsData = [
@@ -68,7 +74,12 @@ const Navbar = () => {
         {/* search and profile  */}
         <div className="hidden md:block">
           <div className=" flex items-center gap-3">
-            <Search className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+            <div className="relative">
+              <Search
+                className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
+                onClick={handleSearchClick}
+              />
+            </div>
             <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
 
             <div>

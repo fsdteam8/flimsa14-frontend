@@ -112,28 +112,31 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setCurrentLevel(data.level);
         });
 
-        hls.on(Hls.Events.ERROR, (event, data) => {
-          console.error("HLS Error:", data);
-          let errorMessage = "An error occurred while loading the video.";
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR:
-                errorMessage =
-                  "Network error. Please check your connection and try again.";
-                break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                errorMessage =
-                  "Media error. The video format may be unsupported.";
-                break;
-              default:
-                errorMessage = "An unexpected error occurred.";
-            }
-            hls.destroy();
-            hlsRef.current = null;
-          }
-          setError(errorMessage);
-          setLoading(false);
-        });
+        // hls.on(Hls.Events.ERROR, (event, data) => {
+        //   console.error("HLS Error:", data);
+        //   // let errorMessage = "An error occurred while loading the video.";
+        //   let errorMessage = "";
+        //   if (data.fatal) {
+        //     switch (data.type) {
+        //       case Hls.ErrorTypes.NETWORK_ERROR:
+        //         errorMessage =
+        //           "Network error. Please check your connection and try again.";
+        //         break;
+        //       case Hls.ErrorTypes.MEDIA_ERROR:
+        //         errorMessage =
+        //           "Media error. The video format may be unsupported.";
+        //         break;
+        //       default:
+        //         errorMessage = "An unexpected error occurred.";
+        //     }
+        //     hls.destroy();
+        //     hlsRef.current = null;
+        //   }
+        //   setError(errorMessage);
+        //   setLoading(false);
+        // });
+
+
       } catch (err) {
         console.error("HLS Setup Error:", err);
         setError("Failed to initialize video player.");
