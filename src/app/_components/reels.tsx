@@ -79,7 +79,7 @@ const Reels = ({
         <h2 className="text-xl md:text-2xl lg:text-3xl font-bold text-white leading-[120%] pt-10 md:pt-14 lg:pt-[80px] pb-6 md:pb-8 lg:pb-10 pl-6 md:pl-8 lg:pl-10">
            {data[2]?.genre?.title || "Movie"}
         </h2>
-        <Link href="/reels" className="text-lg md:text-xl lg:text-2xl font-semibold text-[#BFBFBF] leading-[120%] cursor-pointer hover:text-white hover:underline">
+        <Link href={`/genre/${data[2]?.genre?._id}`} className="text-lg md:text-xl lg:text-2xl font-semibold text-[#BFBFBF] leading-[120%] cursor-pointer hover:text-white hover:underline">
           See All
         </Link>
       </div>
