@@ -31,9 +31,8 @@ export interface PlansResponse {
 
 export default function SubscriptionModal() {
   const router = useRouter();
-   const { data: session, update } = useSession(); // ✅ use update() for session refresh
+  const { data: session, update } = useSession(); // ✅ use update() for session refresh
   const token = session?.user?.accessToken;
-  const isPaid = session?.user?.isPaid;
   console.log(token);
   const { data, isLoading, error, isError } = useQuery<PlansResponse>({
     queryKey: ["plans"],
@@ -50,7 +49,7 @@ export default function SubscriptionModal() {
   const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
     useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
-    const [paymentSuccess, setPaymentSuccess] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   // console.log(showStripeModal);
 
   // console.log(paymentIntentClientSecret);
@@ -62,8 +61,6 @@ export default function SubscriptionModal() {
       setSelectedPlan(data.data[0]);
     }
   }, [data]);
-
-
 
   const handlePlanChange = (planId: string) => {
     setSelectedPlanId(planId);
@@ -130,18 +127,20 @@ export default function SubscriptionModal() {
       return res.json();
     },
     onSuccess: async (data) => {
-      if (data.success) {    
-        toast.success("Subscription payment successful!");
-        setShowStripeModal(false);
-      await update({
-          ...session,
-          user: {
-            ...session?.user,
-            isPaid: true,
-          },
-        });
-
+      if (data.success) {
+        toast.success(data?.message || "Subscription payment successful!");
+        await update();
         setPaymentSuccess(true);
+        setShowStripeModal(false);
+        // await update({
+        //   ...session,
+        //   user: {
+        //     ...session?.user,
+        //     isPaid: true,
+        //   },
+        // });
+
+        
       } else {
         toast.error(data.message || "Payment confirmation failed");
       }
@@ -151,12 +150,11 @@ export default function SubscriptionModal() {
     },
   });
 
-
-    useEffect(() => {
-    if (paymentSuccess && isPaid === true) {
-      router.push("/");
+  useEffect(() => {
+    if (paymentSuccess && !session?.user?.isPaid) {
+      router.push("/login");
     }
-  }, [paymentSuccess, router, isPaid]);
+  }, [paymentSuccess, router, session?.user?.isPaid]);
   const handlePayment = () => {
     if (!selectedPlanId) return toast.error("Please select a plan first");
     createPayment({ planId: selectedPlanId });

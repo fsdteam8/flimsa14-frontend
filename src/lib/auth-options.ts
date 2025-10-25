@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
             name: user?.name,
             email: user?.email,
             role: user?.role,
-            isPaid: false,
+            isPaid: isPaid,
             imageLink: user?.avatar?.url || "",
             accessToken,
             refreshToken,
