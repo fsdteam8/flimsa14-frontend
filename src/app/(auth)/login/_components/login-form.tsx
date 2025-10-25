@@ -121,7 +121,7 @@ const LoginForm = () => {
                         className="absolute right-5 top-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <Eye /> : <EyeOff />}
+                        {showPassword ? <Eye className="text-white"/> : <EyeOff className="text-white"/>}
                       </button>
                     </div>
                   </FormControl>

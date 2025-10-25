@@ -23,7 +23,6 @@ import { useRouter, useSearchParams } from "next/navigation";
 
 export const formSchema = z
   .object({
-
     password: z
       .string()
       .min(6, { message: "Password must be at least 6 characters long." })
@@ -45,7 +44,6 @@ export const formSchema = z
     message: "Passwords do not match.",
   });
 
-
 const ResetPasswordForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -66,7 +64,11 @@ const ResetPasswordForm = () => {
   //   sign up api integration
   const { mutate, isPending } = useMutation({
     mutationKey: ["reset-password"],
-    mutationFn: async (values: { email: string; password: string; otp: string}) => {
+    mutationFn: async (values: {
+      email: string;
+      password: string;
+      otp: string;
+    }) => {
       const response = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/reset-password`,
         {
@@ -92,7 +94,11 @@ const ResetPasswordForm = () => {
   // 2. Define a submit handler.
   function onSubmit(values: z.infer<typeof formSchema>) {
     console.log(values);
-    mutate({email: decodedEmail, password: values?.password, otp: decodedOtp});
+    mutate({
+      email: decodedEmail,
+      password: values?.password,
+      otp: decodedOtp,
+    });
   }
   return (
     <div className="px-3 md:px-0">
@@ -131,7 +137,11 @@ const ResetPasswordForm = () => {
                         className="absolute right-5 top-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <Eye /> : <EyeOff />}
+                        {showPassword ? (
+                          <Eye className="text-white" />
+                        ) : (
+                          <EyeOff className="text-white" />
+                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -159,7 +169,11 @@ const ResetPasswordForm = () => {
                           setShowConfirmPassword(!showConfirmPassword)
                         }
                       >
-                        {showConfirmPassword ? <Eye /> : <EyeOff />}
+                        {showConfirmPassword ? (
+                          <Eye className="text-white" />
+                        ) : (
+                          <EyeOff className="text-white" />
+                        )}
                       </button>
                     </div>
                   </FormControl>
@@ -167,7 +181,6 @@ const ResetPasswordForm = () => {
                 </FormItem>
               )}
             />
-           
 
             <div className="pt-1">
               <Button

@@ -9,6 +9,7 @@ import { toast } from "react-toastify";
 import { Elements } from "@stripe/react-stripe-js";
 import { StripePaymentModal } from "@/components/StripePaymentModal";
 import { loadStripe } from "@stripe/stripe-js";
+import { useRouter } from "next/navigation";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
@@ -29,9 +30,10 @@ export interface PlansResponse {
 }
 
 export default function SubscriptionModal() {
-  const session = useSession();
-  const token = session.data?.user?.accessToken;
-  // console.log(token);
+  const router = useRouter();
+  const { data: session, update } = useSession(); // ✅ use update() for session refresh
+  const token = session?.user?.accessToken;
+  console.log(token);
   const { data, isLoading, error, isError } = useQuery<PlansResponse>({
     queryKey: ["plans"],
     queryFn: async () => {
@@ -47,6 +49,7 @@ export default function SubscriptionModal() {
   const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
     useState("");
   const [showStripeModal, setShowStripeModal] = useState(false);
+  const [paymentSuccess, setPaymentSuccess] = useState(false);
   // console.log(showStripeModal);
 
   // console.log(paymentIntentClientSecret);
@@ -93,6 +96,10 @@ export default function SubscriptionModal() {
       setPaymentIntentClientSecret(data?.data?.clientSecret || "");
       setShowStripeModal(true);
     },
+
+    onError: (data) => {
+      toast.error(data.message || "Something went wrong");
+    },
   });
 
   // ---------- Confirm Payment ----------
@@ -119,10 +126,21 @@ export default function SubscriptionModal() {
       if (!res.ok) throw new Error("Failed to confirm payment");
       return res.json();
     },
-    onSuccess: (data) => {
+    onSuccess: async (data) => {
       if (data.success) {
-        toast.success("Subscription payment successful!");
+        toast.success(data?.message || "Subscription payment successful!");
+        await update();
+        setPaymentSuccess(true);
         setShowStripeModal(false);
+        // await update({
+        //   ...session,
+        //   user: {
+        //     ...session?.user,
+        //     isPaid: true,
+        //   },
+        // });
+
+        
       } else {
         toast.error(data.message || "Payment confirmation failed");
       }
@@ -132,6 +150,11 @@ export default function SubscriptionModal() {
     },
   });
 
+  useEffect(() => {
+    if (paymentSuccess && !session?.user?.isPaid) {
+      router.push("/login");
+    }
+  }, [paymentSuccess, router, session?.user?.isPaid]);
   const handlePayment = () => {
     if (!selectedPlanId) return toast.error("Please select a plan first");
     createPayment({ planId: selectedPlanId });
