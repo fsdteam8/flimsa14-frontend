@@ -31,7 +31,7 @@ export interface PlansResponse {
 export default function SubscriptionModal() {
   const session = useSession();
   const token = session.data?.user?.accessToken;
-  // console.log(token);
+  console.log(token);
   const { data, isLoading, error, isError } = useQuery<PlansResponse>({
     queryKey: ["plans"],
     queryFn: async () => {
@@ -92,6 +92,10 @@ export default function SubscriptionModal() {
       toast.success(data?.message || "Payment intent created successfully");
       setPaymentIntentClientSecret(data?.data?.clientSecret || "");
       setShowStripeModal(true);
+    },
+
+    onError: (data) => {
+      toast.error(data.message || "Something went wrong");
     },
   });
 

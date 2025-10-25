@@ -165,7 +165,7 @@ const SignUpForm = () => {
                         className="absolute right-5 top-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <Eye /> : <EyeOff />}
+                        {showPassword ? <Eye className="text-white"/> : <EyeOff className="text-white"/>}
                       </button>
                     </div>
                   </FormControl>
@@ -193,7 +193,7 @@ const SignUpForm = () => {
                           setShowConfirmPassword(!showConfirmPassword)
                         }
                       >
-                        {showConfirmPassword ? <Eye /> : <EyeOff />}
+                        {showConfirmPassword ? <Eye className="text-white"/> : <EyeOff className="text-white"/>}
                       </button>
                     </div>
                   </FormControl>
