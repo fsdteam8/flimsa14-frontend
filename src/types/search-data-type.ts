@@ -1,3 +1,23 @@
+
+
+
+
+
+
+
+
+
+interface Genre {
+  _id: string;
+  title: string;
+  thumbnail: string;
+  user: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
+
 export interface Movie {
   _id: string;
   title: string;
@@ -5,7 +25,7 @@ export interface Movie {
   cast: string[];
   directors: string[];
   duration: number;
-  genre: { _id: string; name: string }[];
+  genre: Genre[];
   isPremium: boolean;
   language: string;
   releaseDate: string;
