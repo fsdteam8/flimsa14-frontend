@@ -19,7 +19,7 @@ import { useState } from "react";
 import { Eye, EyeOff } from "lucide-react";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
-import { signIn } from "next-auth/react";
+import { signIn, useSession } from "next-auth/react";
 
 export const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -34,6 +34,9 @@ const LoginForm = () => {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const [isLoadig, setIsLoading] = useState(false);
+  const session = useSession();
+  const isPaid = session?.data?.user?.isPaid ?? false;
+  console.log(isPaid)
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -60,7 +63,11 @@ const LoginForm = () => {
       }
 
       toast.success("Signed in successfully!");
-      router.push("/");
+      if (isPaid) {
+        router.push("/");
+      } else {
+        router.push("/subscription");
+      }
     } catch (error) {
       console.error("Login failed:", error);
       toast.error("Something went wrong. Please try again.");
@@ -121,7 +128,11 @@ const LoginForm = () => {
                         className="absolute right-5 top-5"
                         onClick={() => setShowPassword(!showPassword)}
                       >
-                        {showPassword ? <Eye className="text-white"/> : <EyeOff className="text-white"/>}
+                        {showPassword ? (
+                          <Eye className="text-white" />
+                        ) : (
+                          <EyeOff className="text-white" />
+                        )}
                       </button>
                     </div>
                   </FormControl>
