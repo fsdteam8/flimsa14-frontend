@@ -65,7 +65,7 @@ const ForgotPasswordForm = () => {
   }
   return (
     <div className="px-3 md:px-0">
-      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/10 backdrop-blur-[10px] ">
+      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0 ">
         <div className="flex flex-col items-center">
           <Link href="/">
             <Image
@@ -73,13 +73,13 @@ const ForgotPasswordForm = () => {
               alt="Logo"
               width={113}
               height={40}
-              className="w-[1480px] h-[80px] object-contain cursor-pointer"
+              className="w-full h-[80px] object-cover cursor-pointer"
             />
           </Link>
-          <h3 className="text-3xl md:text-[35px] lg:text-[40px] font-semibold text-white leading-[120%] text-center pb-2 pt-6 md:pt-8 lg:pt-10">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-2 md:pb-3 pt-3 md:pt-4 lg:pt-5">
             Forgot Password
           </h3>
-          <p className="text-base font-normal text-white leading-[120%] text-center pb-4">
+          <p className="text-base font-normal text-black leading-[120%] text-center pb-4">
             Enter your email address to reset your password
           </p>
         </div>
@@ -92,7 +92,7 @@ const ForgotPasswordForm = () => {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-white text-base font-medium leading-[120%] "
+                      className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-black text-base font-medium leading-[120%] "
                       placeholder="Email"
                       {...field}
                     />
@@ -105,7 +105,7 @@ const ForgotPasswordForm = () => {
             <div className="pt-1">
               <Button
                 disabled={isPending}
-                className={`w-full h-[52px] bg-white rounded-full py-4 px-8 text-base md:text-lg font-semibold text-[#111] leading-[120%] ${
+                className={`w-full h-[52px] bg-black hover:bg-gray-800 rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] ${
                   isPending
                     ? "opacity-50 cursor-not-allowed"
                     : "hover:bg-[#111] hover:text-white hover:border hover:border-white"
