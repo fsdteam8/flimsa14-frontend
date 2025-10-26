@@ -16,6 +16,7 @@ export async function middleware(request: NextRequest) {
   // --- PUBLIC ROUTES ---
   const publicRoutes = [
     "/more",
+    "/email",
     "/login",
     "/sign-up",
     "/forgot-password",

@@ -25,7 +25,7 @@ export default function MorePage() {
           size="lg"
           className="bg-white text-black hover:bg-gray-200 text-lg px-8 py-3 font-semibold transition-transform duration-200 ease-in-out transform hover:scale-105"
         >
-          <Link href="/sign-up">Get Started</Link>
+          <Link href="/email">Get Started</Link>
         </Button>
       </main>
 

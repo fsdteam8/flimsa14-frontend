@@ -164,7 +164,7 @@ const LoginForm = () => {
             </div>
             <p className="text-base font-normal text-white leading-[120%] text-center pt-4 md:pt-5 lg:pt-6">
               Don’t have an account ?
-              <Link className="hover:underline pl-1" href="/sign-up">
+              <Link className="hover:underline pl-1" href="/email">
                 Sign Up
               </Link>
             </p>
