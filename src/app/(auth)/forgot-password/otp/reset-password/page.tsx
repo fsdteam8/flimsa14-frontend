@@ -4,7 +4,7 @@ import ResetPasswordForm from "./_components/reset-password-form";
 const ResetPasswordPage = () => {
   return (
     <div
-      className={`h-screen w-full flex items-center justify-center bg-cover bg-center bg-no-repeat bg-[url('/assets/auth/auth_bg_img.png')]`}
+      className={`h-screen w-full flex items-center justify-center`}
     >
       <Suspense fallback={<div>Loading...</div>}>
         <ResetPasswordForm />
