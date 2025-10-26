@@ -454,12 +454,12 @@ export default function SubscriptionModal() {
   const total = selectedPlan?.price || 0;
 
   return (
-    <div className="container mx-auto px-4">
+    <div className="w-full">
       {/* Header */}
-      <header className="border-b border-gray-800 mb-8 mb:mb-14 lg:mb-14 sticky top-0 z-50">
+      <header className="w-full bg-black border-b border-gray-800 mb-8 mb:mb-14 lg:mb-14 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center gap-4">
+          <div className="flex flex-col md:flex-row justify-between items-center py-6">
+            <div className="w-full md:w-auto flex justify-between items-center gap-4">
               <Link href="/more" className="hover:underline">
                 <button className="flex items-center text-white hover:bg-gray-800 mr-4">
                   <ArrowLeft className="h-4 w-4 mr-2" />
@@ -468,7 +468,7 @@ export default function SubscriptionModal() {
               </Link>
               <div className="text-white text-lg font-semibold">StreamApp</div>
             </div>
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-4 pt-2 md:pt-0">
               <span className="text-white">
                 Welcome, {session?.user?.email}
               </span>
@@ -478,7 +478,7 @@ export default function SubscriptionModal() {
       </header>
 
       {/* cart part  */}
-      <div className=" flex items-start justify-center  p-4">
+      <div className="container mx-auto px-4 flex items-start justify-center  p-4">
         <div className="  space-y-8">
           {/* Header */}
           <div className="text-center">
