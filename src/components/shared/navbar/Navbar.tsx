@@ -131,14 +131,14 @@ const Navbar = () => {
             <SheetTrigger>
               <AlignJustify className="w-10 h-10 text-[#707070]" />
             </SheetTrigger>
-            <SheetContent className="bg-white">
+            <SheetContent className="bg-[#111111]">
               <div className="w-full flex items-center justify-center pt-6">
                 <Image
                   src="/assets/images/logo.svg"
                   alt="Logo"
                   width={113}
                   height={40}
-                  className="w-[113px] h-auto object-cover cursor-pointer"
+                  className="w-full h-auto object-cover cursor-pointer"
                 />
               </div>
               <ul className="flex flex-col items-center gap-4 md:gap-6 lg:gap-8 pt-6">
@@ -149,7 +149,7 @@ const Navbar = () => {
                       className="text-white text-lg font-medium"
                     >
                       <Link
-                        className="text-lg md:text-xl lg:text-2xl font-medium text-[#707070] leading-[120%] hover:underline hover:text-black"
+                        className="text-lg md:text-xl lg:text-2xl font-medium text-white leading-[120%] hover:underline hover:text-black"
                         href={`${item.link}`}
                       >
                         {" "}
@@ -160,9 +160,45 @@ const Navbar = () => {
                 })}
               </ul>
               <div className=" flex items-center justify-center gap-5 pt-7">
-                <Search className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
-                <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
-                <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-[#707070] cursor-pointer" />
+                <div className="relative">
+              <Search
+                className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
+                onClick={handleSearchClick}
+              />
+            </div>
+                <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+                <div>
+                  {user ? (
+                    <DropdownMenu>
+                      <DropdownMenuTrigger>
+                        {" "}
+                        <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent className="bg-white mt-3">
+                        <Link href={"/my-account"}>
+                          <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
+                            My Account
+                          </DropdownMenuItem>
+                        </Link>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem
+                          onClick={() => signOut({ callbackUrl: "/" })}
+                          className="cursor-pointer text-red-500 text-base md:text-lg font-semibold leading-[120%]"
+                        >
+                          <LogOut /> Logout
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  ) : (
+                    <>
+                      <Link href="/login">
+                        <button className="bg-white py-1 px-4 rounded-[10px] text-base md:text-lg font-semibold text-black leading-normal">
+                          Sign In
+                        </button>
+                      </Link>
+                    </>
+                  )}
+                </div>
               </div>
             </SheetContent>
           </Sheet>
