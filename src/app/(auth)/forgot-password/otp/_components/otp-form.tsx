@@ -187,7 +187,7 @@ export default function OtpForm() {
                 ref={(el) => {
                   inputRefs.current[index] = el;
                 }}
-                className={`w-[52px] h-[58px] bg-white text-black placeholder:text-[#999999] text-center text-xl md:text-2xl font-medium leading-[120%] border-[1px] rounded-md focus:outline-none ${
+                className={`w-[52px] h-[58px] bg-white text-black placeholder:text-black text-center text-xl md:text-2xl font-medium leading-[120%] border-[1px] rounded-md focus:outline-none ${
                   digit ? "border-black" : "border-[#BFBFBF]"
                 }`}
                 aria-label={`OTP digit ${index + 1}`}
