@@ -102,7 +102,7 @@ const ResetPasswordForm = () => {
   }
   return (
     <div className="px-3 md:px-0">
-      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0 ">
+      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/20 border-0 ">
         <div className="flex flex-col items-center">
           <Link href="/">
             <Image
@@ -113,7 +113,7 @@ const ResetPasswordForm = () => {
               className="w-full h-[80px] object-cover cursor-pointer"
             />
           </Link>
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-2 md:pb-5 pt-2 lg:pt-3">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-[120%] text-center pb-2 md:pb-5 pt-2 lg:pt-3">
             Create new password
           </h3>
         </div>
@@ -128,7 +128,7 @@ const ResetPasswordForm = () => {
                     <div className="relative">
                       <Input
                         type={showPassword ? "text" : "password"}
-                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-black text-base font-medium leading-[120%] "
+                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-white text-base font-medium leading-[120%] "
                         placeholder="Password"
                         {...field}
                       />
@@ -138,9 +138,9 @@ const ResetPasswordForm = () => {
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <Eye className="text-black" />
+                          <Eye className="text-white" />
                         ) : (
-                          <EyeOff className="text-black" />
+                          <EyeOff className="text-white" />
                         )}
                       </button>
                     </div>
@@ -158,7 +158,7 @@ const ResetPasswordForm = () => {
                     <div className="relative">
                       <Input
                         type={showConfirmPassword ? "text" : "password"}
-                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-black text-base font-medium leading-[120%] "
+                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-white text-base font-medium leading-[120%] "
                         placeholder="Confirm Password"
                         {...field}
                       />
@@ -170,9 +170,9 @@ const ResetPasswordForm = () => {
                         }
                       >
                         {showConfirmPassword ? (
-                          <Eye className="text-black" />
+                          <Eye className="text-white" />
                         ) : (
-                          <EyeOff className="text-black" />
+                          <EyeOff className="text-white" />
                         )}
                       </button>
                     </div>
