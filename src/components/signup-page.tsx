@@ -424,9 +424,6 @@
 //   );
 // }
 
-
-
-
 "use client";
 
 import React, { useState } from "react";
@@ -661,12 +658,14 @@ export default function SignupPage() {
                   )}
                 />
 
-                <Button
-                  type="submit"
-                  className="w-full h-12 bg-black hover:bg-gray-800 text-white font-medium"
-                >
-                  Continue
-                </Button>
+                <div className="pt-1">
+                  <Button
+                    className={`w-full h-[52px] bg-black hover:bg-gray-800 rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] `}
+                    type="submit"
+                  >
+                    Continue
+                  </Button>
+                </div>
               </form>
             </Form>
           )}
@@ -825,12 +824,15 @@ export default function SignupPage() {
                     </FormItem>
                   )}
                 />
-
                 <div className="pt-2">
                   <Button
-                    type="submit"
                     disabled={isPending}
-                    className="w-full h-12 bg-black hover:bg-gray-800 text-white font-medium"
+                    className={`w-full h-[52px] bg-black hover:bg-gray-800 rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] ${
+                      isPending
+                        ? "opacity-50 cursor-not-allowed"
+                        : "hover:bg-[#111] hover:text-white hover:border hover:border-white"
+                    } `}
+                    type="submit"
                   >
                     {isPending ? (
                       <>

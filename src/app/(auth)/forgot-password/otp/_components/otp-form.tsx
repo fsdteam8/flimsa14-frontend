@@ -152,7 +152,7 @@ export default function OtpForm() {
 
   return (
     <div className="px-3 md:px-0">
-      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0">
+      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/20 border-0">
         <div className="flex flex-col items-center">
           <Link href="/">
             <Image
@@ -163,10 +163,10 @@ export default function OtpForm() {
               className="w-full h-[80px] object-cover cursor-pointer"
             />
           </Link>
-         <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-4 md:pt-6 lg:pt-8">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-[120%] text-center pb-4 md:pb-5 pt-4 md:pt-6 lg:pt-8">
             Verify OTP
           </h3>
-          <p className="text-base font-normal text-black leading-[120%] text-center pb-4">
+          <p className="text-base font-normal text-white leading-[120%] text-center pb-4">
             Please check your Email for a message with your code. <br /> Your
             code is 6 numbers long.
           </p>
@@ -197,27 +197,34 @@ export default function OtpForm() {
 
           {/* Resend OTP */}
           <div className="text-center my-6">
-            <span className="text-base font-medium leading-[120%] text-black tracking-[0%]">
+            <span className="text-base font-medium leading-[120%] text-white tracking-[0%]">
               Didn&apos;t Receive OTP ?{" "}
             </span>
             <button
               onClick={handleResendOtp}
               disabled={resentOtpPending}
-              className="text-base font-medium leading-[120%] text-black tracking-[0%] hover:underline"
+              className="text-base font-medium leading-[120%] text-white tracking-[0%] hover:underline"
             >
               {resentOtpPending ? "Resending..." : "RESEND OTP"}
             </button>
           </div>
 
           {/* Verify Button */}
-          <Button
-            disabled={isPending}
-            onClick={handleVerify}
-            className="text-lg font-bold text-[#F8FAF9] leading-[120%] rounded-[32px] w-full h-[52px] bg-black hover:bg-gray-800 shadow-[0px_4px_4px_0px_rgba(0, 0, 0, 0.15)]"
-            type="submit"
-          >
-            {isPending ? "Sending..." : "Verify OTP"}
-          </Button>
+
+          <div className="pt-1">
+            <Button
+              disabled={isPending}
+              onClick={handleVerify}
+              className={`w-full h-[52px] bg-black hover:bg-gray-800 rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] ${
+                isPending
+                  ? "opacity-50 cursor-not-allowed"
+                  : "hover:bg-[#111] hover:text-white hover:border hover:border-white"
+              } `}
+              type="submit"
+            >
+              {isPending ? "Sending..." : "Verify OTP"}
+            </Button>
+          </div>
         </div>
       </div>
     </div>
