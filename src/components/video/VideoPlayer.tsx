@@ -499,7 +499,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   return (
     <div
       ref={containerRef}
-      className={`relative w-full max-w-5xl mx-auto bg-gray-900 rounded-xl overflow-hidden shadow-2xl group ${className}`}
+      className={`relative w-full max-w-5xl mx-auto bg-gray-900 rounded-xl overflow-hidden  shadow-2xl group ${className}`}
       role="region"
       aria-label={title}
     >
@@ -535,7 +535,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       <video
         ref={videoRef}
         poster={poster}
-        className={`aspect-video w-full object-cover transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+        className={`aspect-video w-full object-cover transition-opacity  duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
         playsInline
         autoPlay
         muted={isMuted}
@@ -571,7 +571,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       </video>
 
       <div
-        className="flex flex-wrap items-center gap-3 border-t border-white/10 bg-black/80 px-4 py-4 text-white text-xs sm:text-sm"
+        className="flex flex-wrap items-center gap-2 lg:gap-3 border-t border-white/10 bg-black/80 px-2 md:px-3 lg:px-4 py-4 text-white text-xs sm:text-sm"
         role="toolbar"
         aria-label="Video controls"
       >
@@ -596,7 +596,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           {formatTime(currentTime)} / {formatTime(duration)}
         </span>
 
-        <div className="flex min-w-[140px] flex-1 items-center">
+        <div className="flex min-w-[100px] flex-1 items-center">
           <div className="relative h-1.5 w-full rounded-full bg-white/20">
             <div
               className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-linear"
@@ -615,7 +615,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         </div>
 
-        <div className="hidden items-center gap-2 sm:flex">
+        <div className="hidden items-center gap-2 sm:flex ">
           <button
             type="button"
             onClick={toggleMute}
