@@ -152,28 +152,28 @@ export default function OtpForm() {
 
   return (
     <div className="px-3 md:px-0">
-      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/20 border-0">
+      <div className="w-screen md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0">
         <div className="flex flex-col items-center">
           <Link href="/">
-            <Image
-              src="/assets/images/logo.svg"
-              alt="Logo"
-              width={113}
-              height={40}
-              className="w-full h-[80px] object-cover cursor-pointer"
-            />
+              <Image
+                         src="/assets/images/azlo-logo.svg"
+                         alt="Logo"
+                         width={113}
+                         height={400}
+                         className="w-full h-[110px] object-cover cursor-pointer"
+                       />
           </Link>
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-[120%] text-center pb-4 md:pb-5 pt-4 md:pt-6 lg:pt-8">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-4 md:pt-6 lg:pt-8">
             Verify OTP
           </h3>
-          <p className="text-base font-normal text-white leading-[120%] text-center pb-4">
-            Please check your Email for a message with your code. <br /> Your
+          <p className="text-base font-normal text-black leading-[120%] text-center pb-4">
+            Please check your Email for a message with your code. <br className="hidden md:block"/> Your
             code is 6 numbers long.
           </p>
         </div>
         <div className="pt-3 md:pt-4">
           {/* OTP Input Fields */}
-          <div className="flex gap-[18px] w-full justify-center">
+          <div className="flex gap-[10px] md:gap-[14px] lg:gap-[18px] w-full justify-center">
             {otp.map((digit, index) => (
               <Input
                 key={index}
@@ -197,13 +197,13 @@ export default function OtpForm() {
 
           {/* Resend OTP */}
           <div className="text-center my-6">
-            <span className="text-base font-medium leading-[120%] text-white tracking-[0%]">
+            <span className="text-base font-medium leading-[120%] text-black tracking-[0%]">
               Didn&apos;t Receive OTP ?{" "}
             </span>
             <button
               onClick={handleResendOtp}
               disabled={resentOtpPending}
-              className="text-base font-medium leading-[120%] text-white tracking-[0%] hover:underline"
+              className="text-base font-medium leading-[120%] text-black tracking-[0%] hover:underline"
             >
               {resentOtpPending ? "Resending..." : "RESEND OTP"}
             </button>
@@ -215,7 +215,7 @@ export default function OtpForm() {
             <Button
               disabled={isPending}
               onClick={handleVerify}
-              className={`w-full h-[52px] bg-black hover:bg-gray-800 rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] ${
+              className={`w-full h-[52px] bg-black  rounded-full py-4 px-8 text-base md:text-lg font-semibold text-white leading-[120%] ${
                 isPending
                   ? "opacity-50 cursor-not-allowed"
                   : "hover:bg-[#111] hover:text-white hover:border hover:border-white"

@@ -102,7 +102,7 @@ const SignUpForm = () => {
         <div className="flex flex-col items-center">
           <Link href="/">
             <Image
-              src="/assets/images/logo.svg"
+              src="/assets/images/logo.png"
               alt="Logo"
               width={113}
               height={40}
