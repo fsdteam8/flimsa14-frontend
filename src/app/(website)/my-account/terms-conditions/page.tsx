@@ -3,9 +3,9 @@ import React from "react";
 const page = () => {
   return (
     <div className="container text-white">
-      <h1 className="text-2xl font-bold mb-4">Terms & Conditions</h1>
+      <h1 className="text-2xl md:text-3xl lg:text-4xl font-bold mb-4 text-center">Terms & Conditions</h1>
 
-      <p className="text-md text-white/75">
+      <p className="text-md text-white/75 text-justify">
         Lorem ipsum dolor sit amet consectetur adipisicing elit. Assumenda
         aliquam rem ab culpa? Nesciunt soluta dolores temporibus repudiandae
         praesentium doloremque, esse officia! Asperiores quo magnam nostrum

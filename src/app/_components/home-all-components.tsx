@@ -25,6 +25,7 @@ const HomeAllComponents = () => {
   }
 
   const moviesByGenre = data?.data?.genreWiseMovies || [];
+  console.log(data?.data)
   const heroMoviesData = data?.data?.movies || [];
   // console.log(data?.data?.movies)
   return (
@@ -78,7 +79,7 @@ const HomeAllComponents = () => {
       </section>
 
       <section>
-        {moviesByGenre?.length > 0 && (
+        {moviesByGenre?.length > 1 && (
           <FamilyMovie
             isLoading={isLoading}
             isError={isError}
@@ -89,7 +90,7 @@ const HomeAllComponents = () => {
       </section>
 
       <section>
-        {moviesByGenre?.length > 0 && (
+        {moviesByGenre?.length > 2 && (
           <Reels
             isLoading={isLoading}
             isError={isError}
