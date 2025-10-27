@@ -5,13 +5,13 @@ import Image from "next/image";
 export default function MorePage() {
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4 text-center">
-      <header className="mb-10">
+      <header className="mb-5">
         <Image
-          src="/assets/images/logo.svg"
+          src="/assets/images/logo.png"
           alt="StreamApp Logo"
           width={500}
           height={500}
-          className="h-[80px] w-[180px] lg:h-[100px] lg:w-[220px]"
+          className="h-[120px] w-[200px] lg:h-[100px] lg:w-[220px] object-cover"
         />
       </header>
 

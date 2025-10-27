@@ -77,25 +77,25 @@ const LoginForm = () => {
   }
   return (
     <div className="px-3 md:px-0">
-      <div className="w-full md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white/20 border-0">
+      <div className="w-screen md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0">
         <div className="flex flex-col items-center">
           <Link href="/">
             {/* <Image
-              src="/assets/images/logo.svg"
+              src="/assets/images/logo.png"
               alt="Logo"
               width={113}
               height={40}
               className="w-[1480px] h-[80px] object-contain cursor-pointer"
             /> */}
             <Image
-              src="/assets/images/logo.svg"
+              src="/assets/images/azlo-logo.svg"
               alt="Logo"
               width={113}
-              height={40}
-              className="w-full h-[80px] object-cover cursor-pointer"
+              height={400}
+              className="w-full h-[110px] object-cover cursor-pointer"
             />
           </Link>
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-white leading-[120%] text-center pb-4 md:pb-5 pt-3 md:pt-4 lg:pt-5">
+          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-1">
             Login To Your Account
           </h3>
         </div>
@@ -108,7 +108,7 @@ const LoginForm = () => {
                 <FormItem>
                   <FormControl>
                     <Input
-                      className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-white text-base font-medium leading-[120%] "
+                      className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-black text-base font-medium leading-[120%] "
                       placeholder="Email"
                       {...field}
                     />
@@ -126,7 +126,7 @@ const LoginForm = () => {
                     <div className="relative">
                       <Input
                         type={showPassword ? "text" : "password"}
-                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-white text-base font-medium leading-[120%] "
+                        className="w-full md:w-[522px] h-[59px] border border-[#BFBFBF] rounded-[6px] placeholder:text-[#BFBFBF] text-black text-base font-medium leading-[120%] "
                         placeholder="Password"
                         {...field}
                       />
@@ -136,9 +136,9 @@ const LoginForm = () => {
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
-                          <Eye className="text-white" />
+                          <Eye className="text-black" />
                         ) : (
-                          <EyeOff className="text-white" />
+                          <EyeOff className="text-black" />
                         )}
                       </button>
                     </div>
@@ -150,7 +150,7 @@ const LoginForm = () => {
             <div className="w-full flex items-center justify-end">
               <Link
                 href="/forgot-password"
-                className="text-base font-medium text-white leading-[120%] hover:underline "
+                className="text-base font-medium text-black leading-[120%] hover:underline "
               >
                 Forgot Password?
               </Link>
@@ -169,7 +169,7 @@ const LoginForm = () => {
                 {isLoadig ? "Logging in..." : "Login"}
               </Button>
             </div>
-            <p className="text-base font-medium text-white leading-[120%] text-center pt-2 md:pt-3 lg:pt-4">
+            <p className="text-base font-medium text-black leading-[120%] text-center pt-2 md:pt-3 lg:pt-4">
               Don’t have an account ?
               <Link className="hover:underline pl-1" href="/email">
                 Sign Up

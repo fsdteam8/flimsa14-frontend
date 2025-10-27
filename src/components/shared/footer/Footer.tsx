@@ -13,15 +13,16 @@ const Footer = () => {
         {/* footer top  */}
         <div className="container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-10 pt-10 md:pt-20 lg:pt-[120px] pb-6 md:pb-8 lg:pb-10">
           <div className="md:col-span-1 w-full flex flex-col items-center md:items-start">
-            <Image
-              src="/assets/images/footer-logo.svg"
+           <div className="">
+             <Image
+              src="/assets/images/logo.png"
               alt="Logo"
-              width={105}
-              height={38}
-              quality={100}
-              className="w-[105px] h-auto object-cover"
+              width={113}
+              height={400}
+              className="w-full h-[100px] object-contain cursor-pointer"
             />
-            <p className="text-base font-normal text-white leading-[120%] pt-3 md:pt-4">
+           </div>
+            <p className="text-base font-normal text-white leading-[120%] pt-3">
               Lorem ipsum dolor sit amet orci aliquam.
             </p>
           </div>

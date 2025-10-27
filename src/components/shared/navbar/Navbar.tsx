@@ -41,23 +41,23 @@ const Navbar = () => {
   ];
   return (
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
-      <div className="container w-full flex items-center justify-between py-2 lg:py-3 px-6 md:px-8 lg:px-10 ">
+      <div className="container w-full flex items-center justify-between py-2 lg:py-2 px-6 md:px-8 lg:px-10 ">
         {/* logo  */}
         <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
-          <Link href={"/"}>
+          <Link href={"/"} className="">
             {/* <Image
-              src="/assets/images/logo.svg"
+              src="/assets/images/logo.png"
               alt="Logo"
               width={113}
               height={40}
               className="w-full h-auto object-cover cursor-pointer"
             /> */}
             <Image
-              src="/assets/images/logo.svg"
+              src="/assets/images/logo.png"
               alt="Logo"
               width={113}
-              height={40}
-              className="w-full h-auto object-cover cursor-pointer"
+              height={400}
+              className="w-full h-[80px] object-contain cursor-pointer"
             />
           </Link>
           <nav className="hidden md:block">
@@ -134,14 +134,14 @@ const Navbar = () => {
             <SheetContent className="bg-[#111111]">
               <div className="w-full flex items-center justify-center pt-6">
                 <Image
-                  src="/assets/images/logo.svg"
+                  src="/assets/images/logo.png"
                   alt="Logo"
-                  width={113}
-                  height={40}
-                  className="w-full h-auto object-cover cursor-pointer"
+                  width={1143}
+                  height={400}
+                  className="w-full h-[120px] object-contain cursor-pointer"
                 />
               </div>
-              <ul className="flex flex-col items-center gap-4 md:gap-6 lg:gap-8 pt-6">
+              <ul className="flex flex-col items-center gap-4 md:gap-6 lg:gap-8 pt-2">
                 {menuItemsData?.map((item) => {
                   return (
                     <li
