@@ -110,7 +110,7 @@ const ResetPasswordForm = () => {
                           alt="Logo"
                           width={113}
                           height={400}
-                          className="w-full h-[110px] object-cover cursor-pointer"
+                          className="w-full h-[80px] object-cover cursor-pointer"
                         />
           </Link>
           <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-2 md:pb-5 pt-2 lg:pt-3">
