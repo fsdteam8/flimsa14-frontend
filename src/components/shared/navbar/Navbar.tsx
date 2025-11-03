@@ -20,6 +20,25 @@ import {
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useQuery } from "@tanstack/react-query";
+import { NavbarSkeleton } from "./NavbarSkeleton";
+
+export interface GenreResponse {
+  success: boolean;
+  message: string;
+  data: Genre[];
+}
+
+export interface Genre {
+  _id: string;
+  user: string;
+  title: string;
+  thumbnail: string;
+  createdAt: string;
+  updatedAt: string;
+  __v: number;
+}
+
 
 const Navbar = () => {
   const session = useSession();
@@ -28,17 +47,44 @@ const Navbar = () => {
   const handleSearchClick = () => {
     router.push("/search");
   };
-  // const token = (session?.data?.user as { accessToken: string })?.accessToken;
+  const token = (session?.data?.user as { accessToken: string })?.accessToken;
   const user = session?.data?.user;
-  const menuItemsData = [
-    { id: 1, title: "Comedy", link: "/" },
-    { id: 2, title: "Action", link: "/" },
-    { id: 3, title: "Mystery", link: "/" },
-    { id: 4, title: "Drama", link: "/" },
-    { id: 5, title: `TV Shows`, link: "/" },
-    { id: 5, title: `Reels`, link: "/reels" },
-    { id: 5, title: `Series`, link: "/series" },
-  ];
+
+  const {data, isLoading, isError, error} = useQuery<GenreResponse>({
+    queryKey: ["genres"],
+    queryFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/genres`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      return res.json();
+    },
+    enabled: !!token
+  })
+
+  console.log(data?.data)
+const menuItemsData =
+  data?.data?.map((genre) => ({
+    id: genre._id,
+    title: genre.title.trim(),
+    link: `/#${genre._id}`, 
+  })) ?? [];
+
+
+  // const menuItemsData = [
+  //   { id: 1, title: "Comedy", link: "/" },
+  //   { id: 2, title: "Action", link: "/" },
+  //   { id: 3, title: "Mystery", link: "/" },
+  //   { id: 4, title: "Drama", link: "/" },
+  //   { id: 5, title: `TV Shows`, link: "/" },
+  //   { id: 5, title: `Reels`, link: "/reels" },
+  //   { id: 5, title: `Series`, link: "/series" },
+  // ];
+
+  if(isLoading) return <NavbarSkeleton/>
+  if(isError) return <div className="py-4 text-center text-white font-semibold leading-[120%]">Error: {error?.message}</div>
   return (
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
       <div className="container w-full flex items-center justify-between py-2 lg:py-2 px-6 md:px-8 lg:px-10 ">
