@@ -39,7 +39,6 @@ export interface Genre {
   __v: number;
 }
 
-
 const Navbar = () => {
   const session = useSession();
   const router = useRouter();
@@ -50,7 +49,7 @@ const Navbar = () => {
   const token = (session?.data?.user as { accessToken: string })?.accessToken;
   const user = session?.data?.user;
 
-  const {data, isLoading, isError, error} = useQuery<GenreResponse>({
+  const { data, isLoading, isError, error } = useQuery<GenreResponse>({
     queryKey: ["genres"],
     queryFn: async () => {
       const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/genres`, {
@@ -58,46 +57,36 @@ const Navbar = () => {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      })
+      });
       return res.json();
     },
-    enabled: !!token
-  })
+    enabled: !!token,
+  });
 
-  console.log(data?.data)
-const menuItemsData =
-  data?.data?.map((genre) => ({
-    id: genre._id,
-    title: genre.title.trim(),
-    link: `/#${genre._id}`, 
-  })) ?? [];
+  // console.log(data?.data)
 
+  const menuItemsData = [
+    { id: "home", title: "Home", link: "/" },
+    ...(data?.data?.map((genre) => ({
+      id: genre._id,
+      title: genre.title.trim(),
+      link: `/#${genre._id}`,
+    })) ?? []),
+  ];
 
-  // const menuItemsData = [
-  //   { id: 1, title: "Comedy", link: "/" },
-  //   { id: 2, title: "Action", link: "/" },
-  //   { id: 3, title: "Mystery", link: "/" },
-  //   { id: 4, title: "Drama", link: "/" },
-  //   { id: 5, title: `TV Shows`, link: "/" },
-  //   { id: 5, title: `Reels`, link: "/reels" },
-  //   { id: 5, title: `Series`, link: "/series" },
-  // ];
-
-  if(isLoading) return <NavbarSkeleton/>
-  if(isError) return <div className="py-4 text-center text-white font-semibold leading-[120%]">Error: {error?.message}</div>
+  if (isLoading) return <NavbarSkeleton />;
+  if (isError)
+    return (
+      <div className="py-4 text-center text-white font-semibold leading-[120%]">
+        Error: {error?.message}
+      </div>
+    );
   return (
     <div className="bg-black/40 backdrop-blur-[10px] sticky top-0 z-50">
       <div className="container w-full flex items-center justify-between py-2 lg:py-2 px-6 md:px-8 lg:px-10 ">
         {/* logo  */}
         <div className="flex items-center gap-4 md:gap-6 lg:gap-8">
           <Link href={"/"} className="">
-            {/* <Image
-              src="/assets/images/logo.png"
-              alt="Logo"
-              width={113}
-              height={40}
-              className="w-full h-auto object-cover cursor-pointer"
-            /> */}
             <Image
               src="/assets/images/logo.png"
               alt="Logo"
@@ -207,11 +196,11 @@ const menuItemsData =
               </ul>
               <div className=" flex items-center justify-center gap-5 pt-7">
                 <div className="relative">
-              <Search
-                className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
-                onClick={handleSearchClick}
-              />
-            </div>
+                  <Search
+                    className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
+                    onClick={handleSearchClick}
+                  />
+                </div>
                 <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
                 <div>
                   {user ? (
