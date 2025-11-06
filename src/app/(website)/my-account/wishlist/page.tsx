@@ -1,8 +1,11 @@
 import React from 'react'
+import WishlistContainer from './_components/wishlist-container'
 
 const page = () => {
   return (
-    <div className='container text-white'>This is Wishlist</div>
+    <div>
+      <WishlistContainer/>
+    </div>
   )
 }
 

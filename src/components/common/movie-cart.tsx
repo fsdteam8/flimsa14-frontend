@@ -3,7 +3,7 @@ import React, { useState } from "react";
 import ViewDetails from "@/app/_components/view-details";
 import { Movie } from "../types/home-page-update-data-type";
 
-const MovieCart = ({ blog }: { blog: Movie }) => {
+const MovieCart = ({ blog }: { blog: Movie  }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 

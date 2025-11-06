@@ -25,7 +25,7 @@ const HomeAllComponents = () => {
   }
 
   const moviesByGenre = data?.data?.genreWiseMovies || [];
-  console.log(data?.data)
+  console.log(data?.data, moviesByGenre)
   const heroMoviesData = data?.data?.movies || [];
   // console.log(data?.data?.movies)
   return (
@@ -67,7 +67,7 @@ const HomeAllComponents = () => {
         )}
       </section> */}
 
-      <section>
+      <section id={moviesByGenre[0]?.genre?._id}>
         {moviesByGenre?.length > 0 && (
           <ComedyClub
             isLoading={isLoading}
@@ -78,7 +78,7 @@ const HomeAllComponents = () => {
         )}
       </section>
 
-      <section>
+      <section id={moviesByGenre[1]?.genre?._id}>
         {moviesByGenre?.length > 1 && (
           <FamilyMovie
             isLoading={isLoading}
@@ -89,7 +89,7 @@ const HomeAllComponents = () => {
         )}
       </section>
 
-      <section>
+      <section id={moviesByGenre[2]?.genre?._id}>
         {moviesByGenre?.length > 2 && (
           <Reels
             isLoading={isLoading}
