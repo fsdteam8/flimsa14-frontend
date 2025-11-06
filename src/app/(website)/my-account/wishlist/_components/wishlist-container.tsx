@@ -1,11 +1,10 @@
 "use client";
-import ViewDetails from "@/app/_components/view-details";
 import ErrorContainer from "@/components/shared/ErrorContainer/ErrorContainer";
 import NotFound from "@/components/shared/NotFound/NotFound";
 import SkeletonWrapper from "@/components/shared/SkeletonWrapper/SkeletonWrapper";
 import { useQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import React, { useState } from "react";
+import Link from "next/link";
 
 export interface WishlistResponse {
   success: boolean;
@@ -57,8 +56,6 @@ export interface Genre {
 
 
 const WishlistContainer = () => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
   const session = useSession();
   const token = (session?.data?.user as { accessToken: string })?.accessToken;
 
@@ -108,12 +105,9 @@ const WishlistContainer = () => {
           console.log(item)
           return (
             <div key={item?._id} className="">
-              <div>
-                <div
-                  onClick={() => {
-                    setIsOpen(true);
-                    setSelectedVideoId(item?._id || null);
-                  }}
+              <Link href={`/my-account/wishlist/${item?._id}`}>
+              <div
+                 
                   className="relative"
                 >
                   <div
@@ -129,17 +123,7 @@ const WishlistContainer = () => {
                     </p>
                   </div>
                 </div>
-                {/* modal open  */}
-                {isOpen && (
-                  <div>
-                    <ViewDetails
-                      open={isOpen}
-                      onOpenChange={() => setIsOpen(false)}
-                      videoId={selectedVideoId}
-                    />
-                  </div>
-                )}
-              </div>
+              </Link>
             </div>
           );
         })}
