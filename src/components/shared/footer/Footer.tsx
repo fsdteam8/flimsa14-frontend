@@ -1,10 +1,10 @@
 import { Instagram, Linkedin, Youtube } from "lucide-react";
 import Image from "next/image";
 import React from "react";
-// import { GoDotFill } from "react-icons/go";
+import { GoDotFill } from "react-icons/go";
 import { FaFacebook } from "react-icons/fa";
 import { FaXTwitter } from "react-icons/fa6";
-// import Link from "next/link";
+import Link from "next/link";
 
 const Footer = () => {
   return (
@@ -63,20 +63,20 @@ const Footer = () => {
           </div>
         </div>
         {/* footer middle  */}
-        {/* <div className="py-6 md:py-8 lg:py-10 border-y border-[#272727]">
+        <div className="py-6 md:py-8 lg:py-10 border-y border-[#272727]">
           <ul className="w-full flex flex-col md:flex-row items-center justify-center gap-4 md:gap-5">
-            <Link href="/my-account/privacy-policy">
+            <Link href="/privacy-policy">
               <li className="flex items-center gap-4 md:gap-5 text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
                 <GoDotFill /> Privacy Policy
               </li>
             </Link>
-            <Link href="/my-account/privacy-policy">
+            <Link href="/privacy-policy">
               <li className="flex items-center gap-4 md:gap-5 text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
                 <GoDotFill /> Term & Condition
               </li>
             </Link>
           </ul>
-        </div> */}
+        </div>
         {/* footer bottom  */}
         <p className="text-base font-normal text-[#595959] leading-[120%] py-3 md:py-4 lg:py-5 text-center">
           © 2025 All Rights Reserved by azlo.
