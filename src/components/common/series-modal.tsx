@@ -1,11 +1,11 @@
 "use client"
 
-import type { Series, Season, Episode } from "@/app/series-movies/page"
 import { useState, useEffect } from "react"
 import { createPortal } from "react-dom"
 import { X, ChevronDown, Play } from "lucide-react"
 import VideoPlayer from "../video/VideoPlayer"
 import Image from "next/image"
+import type { Series, Season, Episode } from "@/app/_components/series-movies"
 
 interface SeriesModalProps {
   series: Series

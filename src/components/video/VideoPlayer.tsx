@@ -474,6 +474,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const handleVideoPointerUp = (event: React.PointerEvent<HTMLVideoElement>) => {
+    //eslint-disable-next-line @typescript-eslint/no-explicit-any
     if (event.pointerType === "mouse" && (event as any).button !== 0) return;
     const now = Date.now();
     const rect = event.currentTarget.getBoundingClientRect();
@@ -513,7 +514,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
-  const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+  // const progressPercent = duration ? (currentTime / duration) * 100 : 0;
   const volumePercent = isMuted ? 0 : volume * 100;
   const hideCursor = isPlaying && !loading && !controlsVisible;
 

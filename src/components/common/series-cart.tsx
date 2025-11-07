@@ -1,6 +1,6 @@
 "use client"
 import { useState } from "react"
-import type { Series } from "@/app/series-movies/page"
+import type { Series } from "@/app/_components/series-movies"
 import SeriesModal from "./series-modal"
 
 const SeriesCart = ({ blog }: { blog: Series }) => {
