@@ -1,20 +1,16 @@
-"use client";
-import React, { useState } from "react";
-import { Series } from "@/app/_components/series-movies";
-import SeriesViewDetails from "@/app/_components/series-view-details";
+"use client"
+import { useState } from "react"
+import type { Series } from "@/app/series-movies/page"
+import SeriesModal from "./series-modal"
 
 const SeriesCart = ({ blog }: { blog: Series }) => {
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
-
-  console.log("Series Cart:", blog);
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <div>
       <div
         onClick={() => {
-          setIsOpen(true);
-          setSelectedVideoId(blog?._id || null);
+          setIsOpen(true)
         }}
         className="relative"
       >
@@ -31,18 +27,9 @@ const SeriesCart = ({ blog }: { blog: Series }) => {
           </p>
         </div>
       </div>
-      {/* modal open  */}
-      {isOpen && (
-        <div>
-          <SeriesViewDetails
-            open={isOpen}
-            onOpenChange={() => setIsOpen(false)}
-            videoId={selectedVideoId}
-          />
-        </div>
-      )}
+      <SeriesModal series={blog} isOpen={isOpen} onClose={() => setIsOpen(false)} />
     </div>
-  );
-};
+  )
+}
 
-export default SeriesCart;
+export default SeriesCart

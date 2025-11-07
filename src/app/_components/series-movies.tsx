@@ -1,20 +1,20 @@
-"use client";
+"use client"
 
-import { useQuery } from "@tanstack/react-query";
-import React, { useRef } from "react";
+import { useQuery } from "@tanstack/react-query"
+import { useRef } from "react"
 
 // Swiper
-import "swiper/css";
-import "swiper/css/autoplay";
-import "swiper/css/effect-coverflow";
-import "swiper/css/virtual";
-import { Autoplay } from "swiper/modules";
-import { Swiper, SwiperSlide } from "swiper/react";
-import { Swiper as SwiperCore } from "swiper/types";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import SeriesCart from "@/components/common/series-cart";
-import Link from "next/link";
-import { useSession } from "next-auth/react";
+import "swiper/css"
+import "swiper/css/autoplay"
+import "swiper/css/effect-coverflow"
+import "swiper/css/virtual"
+import { Autoplay } from "swiper/modules"
+import { Swiper, SwiperSlide } from "swiper/react"
+import type { Swiper as SwiperCore } from "swiper/types"
+import { ChevronLeft, ChevronRight } from "lucide-react"
+import SeriesCart from "@/components/common/series-cart"
+import Link from "next/link"
+import { useSession } from "next-auth/react"
 
 const breakpoints = {
   0: {
@@ -33,90 +33,87 @@ const breakpoints = {
     slidesPerView: 4,
     spaceBetween: 30,
   },
-};
+}
 
 export interface Genre {
-  _id: string;
-  user: string;
-  title: string;
-  thumbnail: string;
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  _id: string
+  user: string
+  title: string
+  thumbnail: string
+  createdAt: string
+  updatedAt: string
+  __v: number
 }
 
 export interface Episode {
-  _id: string;
-  title: string;
-  description: string;
-  episodeNumber: number;
-  videoUrl: string;
-  duration: number;
-  thumbnailUrl: string | null;
-  releaseDate: string; // ISO date string
+  _id: string
+  title: string
+  description: string
+  episodeNumber: number
+  videoUrl: string
+  duration: number
+  thumbnailUrl: string | null
+  releaseDate: string // ISO date string
 }
 
 export interface Season {
-  _id: string;
-  seasonNumber: number;
-  name: string;
-  trailerUrl: string;
-  thumbnailUrl: string | null;
-  episodes: Episode[];
+  _id: string
+  seasonNumber: number
+  name: string
+  trailerUrl: string
+  thumbnailUrl: string | null
+  episodes: Episode[]
 }
 
 export interface Series {
-  _id: string;
-  title: string;
-  description: string;
-  genre: Genre[];
-  cast: string[]; // Note: some data might come as ["[\"name\"]"] so may need parsing
-  trailerUrl: string;
-  thumbnailUrl: string | null;
-  status: string; // e.g., "ongoing"
-  seasons: Season[];
-  createdAt: string;
-  updatedAt: string;
-  __v: number;
+  _id: string
+  title: string
+  description: string
+  genre: Genre[]
+  cast: string[] // Note: some data might come as ["[\"name\"]"] so may need parsing
+  trailerUrl: string
+  thumbnailUrl: string | null
+  status: string // e.g., "ongoing"
+  seasons: Season[]
+  createdAt: string
+  updatedAt: string
+  __v: number
 }
 
 export interface Pagination {
-  total: number;
-  page: number;
-  pages: number;
+  total: number
+  page: number
+  pages: number
 }
 
 export interface SeriesData {
-  series: Series[];
-  pagination: Pagination;
+  series: Series[]
+  pagination: Pagination
 }
 
 export interface SeriesResponse {
-  success: boolean;
-  message: string;
-  data: SeriesData;
+  success: boolean
+  message: string
+  data: SeriesData
 }
 
 const SeriesMovies = () => {
-  const swiperRef = useRef<SwiperCore | null>(null);
-  const session = useSession();
+  const swiperRef = useRef<SwiperCore | null>(null)
+  const session = useSession()
   console.log(session?.data)
   const { data, isLoading, isError, error } = useQuery<SeriesResponse>({
     queryKey: ["all-series-movies"],
-    queryFn: () =>
-      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/series`).then((res) =>
-        res.json()
-      ),
-  });
+    queryFn: () => fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/series`).then((res) => res.json()),
+  })
 
-  console.log("series data", data?.data?.series);
-  const seriesMoviesData = data?.data?.series || [];
+  console.log("series data", data?.data?.series)
+  const seriesMoviesData = data?.data?.series || []
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <div>Loading...</div>
   }
   if (isError) {
-    return <div>Error: {error?.message}</div>;
+    return <div>Error: {error?.message}</div>
   }
   return (
     <div className="container">
@@ -172,7 +169,7 @@ const SeriesMovies = () => {
         )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default SeriesMovies;
+export default SeriesMovies

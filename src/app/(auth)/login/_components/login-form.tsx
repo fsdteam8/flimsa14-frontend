@@ -88,14 +88,14 @@ const LoginForm = () => {
               className="w-[1480px] h-[80px] object-contain cursor-pointer"
             /> */}
             <Image
-              src="/assets/images/azlo-logo.svg"
+              src="/assets/images/logo.png"
               alt="Logo"
-              width={113}
-              height={400}
-              className="w-auto h-[80px] object-cover cursor-pointer"
+              width={500}
+              height={500}
+              className="w-auto h-[120px] object-cover cursor-pointer brightness-0 scale-125"
             />
           </Link>
-          <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-1">
+          <h3 className="text-xl md:text-2xl lg:text-2xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-1">
             Login To Your Account
           </h3>
         </div>
