@@ -69,10 +69,27 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
 
   // Lock page behind modal so only the modal scrolls
   useEffect(() => {
-    if (isOpen) document.body.style.overflow = "hidden"
-    else document.body.style.overflow = ""
+    if (!isOpen) return
+
+    const bodyStyle = document.body.style
+    const rootStyle = document.documentElement.style
+    const previous = {
+      bodyOverflow: bodyStyle.overflow,
+      htmlOverflow: rootStyle.overflow,
+      bodyPaddingRight: bodyStyle.paddingRight,
+    }
+    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
+
+    bodyStyle.overflow = "hidden"
+    rootStyle.overflow = "hidden"
+    if (scrollbarWidth > 0) {
+      bodyStyle.paddingRight = `${scrollbarWidth}px`
+    }
+
     return () => {
-      document.body.style.overflow = ""
+      bodyStyle.overflow = previous.bodyOverflow
+      rootStyle.overflow = previous.htmlOverflow
+      bodyStyle.paddingRight = previous.bodyPaddingRight
     }
   }, [isOpen])
 
