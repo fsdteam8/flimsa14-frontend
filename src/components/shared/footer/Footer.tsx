@@ -1,4 +1,4 @@
-import { Instagram, Linkedin, Youtube } from "lucide-react";
+import { Instagram, Youtube } from "lucide-react";
 import Image from "next/image";
 import React from "react";
 import { GoDotFill } from "react-icons/go";
@@ -31,11 +31,23 @@ const Footer = () => {
               FOLLOW US ON
             </h3>
             <div className="w-full flex items-center justify-center gap-4 md:gap-6 lg:gap-8 pt-3 md:pt-4">
-              <Youtube className="w-8 h-8 text-white cursor-pointer" />
-              <Linkedin className="w-8 h-8 text-white cursor-pointer" />
-              <FaFacebook className="w-8 h-8 text-white cursor-pointer" />
+              <Link target="_blank" href="https://www.youtube.com/@azlotvplus">
+               <Youtube className="w-8 h-8 text-white cursor-pointer" />
+              </Link>
+              <Link target="_blank" href="https://www.instagram.com/accounts/login/?next=%2Fazlotv%2F&source=omni_redirect">
               <Instagram className="w-8 h-8 text-white cursor-pointer" />
-              <FaXTwitter className="w-8 h-8 text-white cursor-pointer" />
+              </Link>
+              <Link target="_blank" href="https://www.facebook.com/profile.php?id=61579738584528&mibextid=wwXIfr">
+              <FaFacebook className="w-8 h-8 text-white cursor-pointer" />
+              </Link>
+              <Link target="_blank" href="https://x.com/azlotv?s=21">
+               <FaXTwitter className="w-8 h-8 text-white cursor-pointer" />
+              </Link>
+             
+              {/* <Linkedin className="w-8 h-8 text-white cursor-pointer" /> */}
+              
+              
+             
             </div>
           </div>
           <div className="md:col-span-1">

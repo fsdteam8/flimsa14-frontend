@@ -26,7 +26,7 @@ const ViewDetails = ({
     retry: 3,
   });
 
-  console.log(data?.data);
+  console.log("view details", data?.data);
 
   if (isError) {
     console.error(error);
@@ -40,7 +40,7 @@ const ViewDetails = ({
     <div>
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent
-          className="bg-[#111827] p-2 text-white border-0 shadow-xl rounded-lg"
+          className="bg-[#111111] p-2 text-white border-0 shadow-xl rounded-lg"
         >
           <div className="p-2">
             <Suspense fallback={<div>Loading...</div>}>
