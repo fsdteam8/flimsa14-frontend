@@ -174,7 +174,7 @@ const HeroSection = ({ data }: { data: Movie[] }) => {
                 Director: {movie?.directors.join(", ")}
               </p> */}
               <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
-                Release : {moment(movie?.releaseDate).format("MMMM D, YYYY")}
+                {moment(movie?.releaseDate).format("MMMM D, YYYY")}
               </p>
             </div>
           </SwiperSlide>

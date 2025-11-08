@@ -368,7 +368,7 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
             )}
 
             {/* Playback mode indicator */}
-            <div className="pt-2 border-t border-neutral-800 text-xs md:text-sm text-neutral-400">
+            {/* <div className="pt-2 border-t border-neutral-800 text-xs md:text-sm text-neutral-400">
               {playingMode === "trailer" ? (
                 <span>🎬 Now playing: Season {selectedSeason?.seasonNumber} Trailer</span>
               ) : (
@@ -376,7 +376,7 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
                   ▶ Now playing: Episode {selectedEpisode?.episodeNumber} - {selectedEpisode?.title}
                 </span>
               )}
-            </div>
+            </div> */}
           </div>
         </div>
       </div>

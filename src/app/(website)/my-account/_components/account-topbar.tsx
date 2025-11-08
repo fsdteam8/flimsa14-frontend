@@ -1,8 +1,8 @@
 "use client";
 import { LogOut, Menu } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import React from "react";
+import { usePathname, useRouter } from "next/navigation";
+import React, { useState } from "react";
 import {
   Sheet,
   SheetContent,
@@ -10,10 +10,23 @@ import {
   SheetClose,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { signOut } from "next-auth/react";
+import { signOut, useSession } from "next-auth/react";
+
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { useMutation } from "@tanstack/react-query";
 
 const AccountTopBar = () => {
+  const router = useRouter();
+  const session = useSession();
+  const token = (session?.data?.user as { accessToken: string })?.accessToken;
   const pathName = usePathname();
+  const [deleteAccountModal, setDeleteAccountModal] = useState(false);
 
   const topBarLinks = [
     {
@@ -37,6 +50,28 @@ const AccountTopBar = () => {
       path: "/my-account/terms-conditions",
     },
   ];
+
+  const { mutate: deleteMutate, isPending } = useMutation({
+    mutationKey: ["delete-account"],
+    mutationFn: async () => {
+      const response = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/auth/delete`,
+        {
+          method: "DELETE",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return response.json();
+    },
+  });
+
+  const handleDeleteAccount = () => {
+    deleteMutate();
+    router.push("/login");
+  };
 
   return (
     <div className="mt-8 mb-8 container">
@@ -63,6 +98,17 @@ const AccountTopBar = () => {
               </li>
             );
           })}
+
+          <div>
+            <button
+              onClick={() => {
+                setDeleteAccountModal(true);
+              }}
+              className="text-white"
+            >
+              Delete Account
+            </button>
+          </div>
 
           <button
             onClick={() => signOut({ callbackUrl: "/" })}
@@ -123,6 +169,45 @@ const AccountTopBar = () => {
             </div>
           </SheetContent>
         </Sheet>
+      </div>
+
+      {/* delete account modal here  */}
+      <div>
+        {deleteAccountModal && (
+          <>
+            <Dialog
+              open={deleteAccountModal}
+              onOpenChange={setDeleteAccountModal}
+            >
+              <DialogContent className="max-w-[400px] bg-black/80">
+                <DialogHeader>
+                  <DialogTitle className="text-xl md:text-2xl lg:text-3xl font-semibold leading-[120%] text-white">
+                    Delete Account
+                  </DialogTitle>
+                  <DialogDescription className="text-xm md:text-sm lg:text-base font-normal text-white leading-[120%] pt-2">
+                    Are you sure you want to delete your <br /> account? This
+                    action cannot be undone
+                    <div className="pt-6 w-full flex items-center justify-end gap-8">
+                      <button
+                        onClick={() => setDeleteAccountModal(false)}
+                        className="text-sm md:text-base lg:text-lg font-medium text-white leading-[120%] cursor-pointer"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        disabled={isPending}
+                        onClick={handleDeleteAccount}
+                        className="text-sm md:text-base lg:text-lg font-medium text-red-500 leading-[120%] cursor-pointer"
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </>
+        )}
       </div>
     </div>
   );
