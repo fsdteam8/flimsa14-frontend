@@ -1,10 +1,10 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { createPortal } from "react-dom"
 import { X, ChevronDown, Play } from "lucide-react"
-import VideoPlayer from "../video/VideoPlayer"
 import Image from "next/image"
+import VideoPlayer from "../video/VideoPlayer"
 import type { Series, Season, Episode } from "@/app/_components/series-movies"
 
 interface SeriesModalProps {
@@ -20,7 +20,10 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
   const [showEpisodes, setShowEpisodes] = useState(true)
   const [mounted, setMounted] = useState(false)
 
-  // Initialize with first season
+  const heroRef = useRef<HTMLDivElement>(null)
+  const scrollContainerRef = useRef<HTMLDivElement>(null)
+
+  // Initialize with first season/episode
   useEffect(() => {
     if (series.seasons.length > 0 && !selectedSeason) {
       const firstSeason = series.seasons[0]
@@ -31,9 +34,13 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
     }
   }, [series, selectedSeason])
 
+  useEffect(() => setMounted(true), [])
+
   useEffect(() => {
-    setMounted(true)
-  }, [])
+    if (isOpen && scrollContainerRef.current) {
+      scrollContainerRef.current.scrollTop = 0
+    }
+  }, [isOpen])
 
   if (!isOpen || !mounted) return null
 
@@ -42,17 +49,26 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
       ? selectedEpisode.videoUrl
       : selectedSeason?.trailerUrl || series.trailerUrl
 
+  const focusPlayer = () => {
+    heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
   const handleSeasonChange = (season: Season) => {
     setSelectedSeason(season)
-    if (season.episodes.length > 0) {
-      setSelectedEpisode(season.episodes[0])
-    }
+    if (season.episodes.length > 0) setSelectedEpisode(season.episodes[0])
     setPlayingMode("trailer")
+    focusPlayer()
   }
 
   const handleEpisodeClick = (episode: Episode) => {
     setSelectedEpisode(episode)
     setPlayingMode("episode")
+    focusPlayer()
+  }
+
+  const toggleEpisodes = () => {
+    setShowEpisodes((prev) => !prev)
+    requestAnimationFrame(focusPlayer)
   }
 
   return createPortal(
@@ -65,13 +81,16 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
 
       {/* Modal Container */}
       <div
-        className="fixed inset-0 z-50 flex items-center justify-center p-3 md:p-4 overflow-y-auto"
+        className="fixed inset-0 z-50 flex justify-center p-0 sm:p-3 md:p-4"
         onClick={(e) => {
           if (e.target === e.currentTarget) onClose()
         }}
       >
-        <div className="relative w-full max-w-5xl bg-gray-900 rounded-xl overflow-hidden my-4 md:my-auto">
-          {/* Close Button */}
+        <div
+          ref={scrollContainerRef}
+          className="relative w-screen sm:w-full max-w-5xl bg-gray-900 rounded-none sm:rounded-xl overflow-y-auto my-0 sm:my-4"
+        >
+          {/* Close */}
           <button
             onClick={onClose}
             className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition md:top-6 md:right-6"
@@ -80,26 +99,26 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
             <X className="w-5 h-5 md:w-6 md:h-6" />
           </button>
 
-          {/* Hero Section with Video Player */}
+          {/* Hero Section (sticky; no extra wrapper → no black bar) */}
           {currentVideoUrl && (
-            <div className="relative w-full bg-black">
+            <div ref={heroRef} className="sticky top-0 z-30">
               <VideoPlayer
                 videoUrl={currentVideoUrl}
                 poster={series.thumbnailUrl || "/placeholder.svg?height=400&width=800"}
                 title={series.title}
                 movieId={series._id}
+                className="w-full"
               />
             </div>
           )}
 
-          {/* Content Section */}
+          {/* Content */}
           <div className="p-4 md:p-6 lg:p-8 space-y-6">
             {/* Title & Info */}
             <div className="space-y-3">
               <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{series.title}</h2>
               <p className="text-sm md:text-base text-gray-300 line-clamp-2 md:line-clamp-3">{series.description}</p>
 
-              {/* Genres */}
               {series.genre.length > 0 && (
                 <div className="flex flex-wrap gap-2">
                   {series.genre.map((gen) => (
@@ -143,17 +162,17 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
 
               {/* Toggle Episodes on Mobile */}
               <button
-                onClick={() => setShowEpisodes(!showEpisodes)}
+                onClick={toggleEpisodes}
                 className="md:hidden w-full py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white text-sm rounded-lg transition-colors"
               >
                 {showEpisodes ? "Hide Episodes" : "Show Episodes"}
               </button>
             </div>
 
-            {/* Episodes Grid/List */}
+            {/* Episodes (no nested scroll on mobile; desktop has contained scroll) */}
             {showEpisodes && (
-              <div className="space-y-2 md:space-y-3 max-h-[60vh] md:max-h-96 overflow-y-auto pr-2 md:pr-0">
-                {selectedSeason?.episodes && selectedSeason.episodes.length > 0 ? (
+              <div className="space-y-2 md:space-y-3 md:max-h-96 md:overflow-y-auto">
+                {selectedSeason?.episodes?.length ? (
                   <div className="grid gap-2 md:gap-3">
                     {selectedSeason.episodes.map((episode, index) => (
                       <button
@@ -165,7 +184,7 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
                             : "bg-gray-800 hover:bg-gray-700"
                         }`}
                       >
-                        {/* Episode Thumbnail */}
+                        {/* Thumb */}
                         <div className="relative w-24 md:w-28 flex-shrink-0 aspect-video bg-gray-700 rounded overflow-hidden">
                           <Image
                             src={episode.thumbnailUrl || "/placeholder.svg?height=150&width=250"}
@@ -173,7 +192,6 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
                             fill
                             className="object-cover"
                           />
-                          {/* Play Icon Overlay */}
                           <div className="absolute inset-0 flex items-center justify-center bg-black/40 group-hover:bg-black/20 transition-colors">
                             <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/30 group-hover:bg-white/50 transition-colors">
                               <Play className="w-4 h-4 text-white fill-white ml-0.5" />
@@ -181,9 +199,8 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
                           </div>
                         </div>
 
-                        {/* Episode Info */}
+                        {/* Info */}
                         <div className="flex-1 text-left min-w-0 py-1">
-                          {/* Episode Number & Title */}
                           <div className="flex items-start justify-between gap-2 mb-1.5">
                             <span className="text-white font-semibold text-sm md:text-base line-clamp-2">
                               Ep {episode.episodeNumber}: {episode.title}
@@ -195,10 +212,10 @@ export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProp
                             )}
                           </div>
 
-                          {/* Description */}
-                          <p className="text-gray-300 text-xs md:text-sm line-clamp-2 mb-1.5">{episode.description}</p>
+                          <p className="text-gray-300 text-xs md:text-sm line-clamp-2 mb-1.5">
+                            {episode.description}
+                          </p>
 
-                          {/* Release Date */}
                           {episode.releaseDate && (
                             <p className="text-gray-500 text-xs">
                               {new Date(episode.releaseDate).toLocaleDateString("en-US", {
