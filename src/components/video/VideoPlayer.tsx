@@ -40,6 +40,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const lastTapRef = useRef<{ time: number; x: number } | null>(null);
   const hideUiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const posterDismissedRef = useRef(false);
 
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
@@ -53,6 +54,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   latestSourceRef.current = resolvedSrc;
 
   // UI state
+  const [posterActive, setPosterActive] = useState(Boolean(poster));
   const [loading, setLoading] = useState(true);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
@@ -75,6 +77,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return `${m}:${s < 10 ? `0${s}` : s}`;
   };
 
+  const hidePosterOverlay = () => {
+    if (posterDismissedRef.current) return;
+    posterDismissedRef.current = true;
+    setPosterActive(false);
+  };
+
   // Attempt to play with sound; if blocked by policy, require user gesture
   const tryPlayWithSound = async () => {
     const video = videoRef.current;
@@ -83,6 +91,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setIsMuted(false);
     try {
       await video.play();
+      hidePosterOverlay();
       setIsPlaying(true);
       setGestureRequired(false);
     } catch {
@@ -522,6 +531,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    if (!posterDismissedRef.current) {
+      setPosterActive(Boolean(poster));
+    }
+  }, [poster]);
+
   const volumePercent = isMuted ? 0 : volume * 100;
   const hideCursor = isPlaying && !loading && !controlsVisible;
 
@@ -581,10 +596,24 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </button>
       )}
 
+      {/* Poster overlay shown once before the first playback */}
+      {posterActive && poster && (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            className="absolute inset-0 bg-center bg-cover"
+            style={{ backgroundImage: `url(${poster})` }}
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+      )}
+
       {/* Video */}
       <video
         ref={videoRef}
-        poster={poster}
+        poster={posterActive ? poster : undefined}
         className={`aspect-video w-full object-cover transition-opacity duration-300 ${
           loading ? "opacity-0" : "opacity-100"
         }`}
@@ -595,6 +624,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         crossOrigin="anonymous"
         onPointerUp={handleVideoPointerUp}
         onPlay={() => {
+          hidePosterOverlay();
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
