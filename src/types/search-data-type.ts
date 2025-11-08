@@ -40,8 +40,9 @@ export interface Movie {
 export interface Series {
   _id: string;
   title: string;
-  description: string;
-  // add other fields if needed
+  genre: Genre[];
+  // other properties...
+  thumbnailUrl: string;
 }
 
 export interface ApiResponse {
