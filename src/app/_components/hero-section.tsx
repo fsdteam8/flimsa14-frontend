@@ -167,14 +167,14 @@ const HeroSection = ({ data }: { data: Movie[] }) => {
               <h1 className="text-3xl md:text-4xl lg:text-5xl text-white font-bold leading-[120%] pb-3 md:pb-4 lg:pb-5">
                 {movie?.title}
               </h1>
-              <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
+              {/* <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
                 Cast: {movie?.cast.join(", ")}
               </p>
               <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%] py-2">
                 Director: {movie?.directors.join(", ")}
-              </p>
+              </p> */}
               <p className="text-xl md:text-2xl lg:text-[28px] font-semibold text-white leading-[120%]">
-                Release: {moment(movie?.releaseDate).format("MMMM D, YYYY")}
+                Release : {moment(movie?.releaseDate).format("MMMM D, YYYY")}
               </p>
             </div>
           </SwiperSlide>
