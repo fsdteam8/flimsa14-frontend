@@ -1,16 +1,17 @@
-"use client";
+"use client"
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import Hls from "hls.js";
-import { useSession } from "next-auth/react";
+import type React from "react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
+import Hls from "hls.js"
+import { useSession } from "next-auth/react"
 
 interface VideoPlayerProps {
-  src?: string;
-  videoUrl?: string;
-  poster?: string;
-  title?: string;
-  className?: string;
-  movieId: string;
+  src?: string
+  videoUrl?: string
+  poster?: string
+  title?: string
+  className?: string
+  movieId: string
 }
 
 const qualityLabels: Record<string | number, string> = {
@@ -19,11 +20,11 @@ const qualityLabels: Record<string | number, string> = {
   480: "480p",
   720: "720p",
   1080: "1080p",
-};
+}
 
-const MAX_RETRIES = 4;
-const AUTOPLAY_MAX_ATTEMPTS = 4;
-const CONTROLS_HIDE_MS = 3000;
+const MAX_RETRIES = 4
+const AUTOPLAY_MAX_ATTEMPTS = 4
+const CONTROLS_HIDE_MS = 3000
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   src,
@@ -33,133 +34,129 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   title = "Video Player",
   movieId,
 }) => {
-  const videoRef = useRef<HTMLVideoElement>(null);
-  const outerRef = useRef<HTMLDivElement>(null);
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const outerRef = useRef<HTMLDivElement>(null)
 
-  const hlsRef = useRef<Hls | null>(null);
-  const hlsHandlersBoundRef = useRef(false);
+  const hlsRef = useRef<Hls | null>(null)
+  const hlsHandlersBoundRef = useRef(false)
 
-  const cleanupRef = useRef<(() => void) | null>(null);
-  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const latestSourceRef = useRef("");
-  const autoplayAttemptsRef = useRef(0);
-  const progressTimerRef = useRef<NodeJS.Timeout | null>(null);
-  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPointerRef = useRef<{ time: number; pointerType: string } | null>(null);
-  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const cleanupRef = useRef<(() => void) | null>(null)
+  const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const latestSourceRef = useRef("")
+  const autoplayAttemptsRef = useRef(0)
+  const progressTimerRef = useRef<NodeJS.Timeout | null>(null)
+  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const lastPointerRef = useRef<{ time: number; pointerType: string } | null>(null)
+  const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const [skipFeedback, setSkipFeedback] = useState<{ direction: "left" | "right"; key: string } | null>(null)
 
-  const firstPlaybackDoneRef = useRef(false); // used if you want to hide poster after first ever play
+  const firstPlaybackDoneRef = useRef(false)
 
-  const { data: session } = useSession();
-  const token = session?.user?.accessToken;
+  const { data: session } = useSession()
+  const token = session?.user?.accessToken
 
-  const isIOS = useMemo(
-    () => typeof navigator !== "undefined" && /iP(ad|hone|od)/i.test(navigator.userAgent),
-    []
-  );
+  const isIOS = useMemo(() => typeof navigator !== "undefined" && /iP(ad|hone|od)/i.test(navigator.userAgent), [])
 
   const resolvedSrc = useMemo(() => {
-    if (typeof src === "string" && src.trim()) return src.trim();
-    if (typeof videoUrl === "string" && videoUrl.trim()) return videoUrl.trim();
-    return "";
-  }, [src, videoUrl]);
+    if (typeof src === "string" && src.trim()) return src.trim()
+    if (typeof videoUrl === "string" && videoUrl.trim()) return videoUrl.trim()
+    return ""
+  }, [src, videoUrl])
 
-  latestSourceRef.current = resolvedSrc;
+  latestSourceRef.current = resolvedSrc
 
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [retryCount, setRetryCount] = useState(0);
-  const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(true);
-  const [currentTime, setCurrentTime] = useState(0);
-  const [duration, setDuration] = useState(0);
-  const [levels, setLevels] = useState<Array<{ height: number }>>([]);
-  const [currentLevel, setCurrentLevel] = useState(-1);
-  const [volume, setVolume] = useState(1);
-  const [controlsVisible, setControlsVisible] = useState(true);
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [retryCount, setRetryCount] = useState(0)
+  const [isPlaying, setIsPlaying] = useState(false)
+  const [isMuted, setIsMuted] = useState(true)
+  const [currentTime, setCurrentTime] = useState(0)
+  const [duration, setDuration] = useState(0)
+  const [levels, setLevels] = useState<Array<{ height: number }>>([])
+  const [currentLevel, setCurrentLevel] = useState(-1)
+  const [volume, setVolume] = useState(1)
+  const [controlsVisible, setControlsVisible] = useState(true)
 
-  // ---- helpers
   const formatTime = (sec: number) => {
-    if (Number.isNaN(sec)) return "0:00";
-    const m = Math.floor(sec / 60);
-    const s = Math.floor(sec % 60);
-    return `${m}:${s < 10 ? `0${s}` : s}`;
-  };
+    if (Number.isNaN(sec)) return "0:00"
+    const m = Math.floor(sec / 60)
+    const s = Math.floor(sec % 60)
+    return `${m}:${s < 10 ? `0${s}` : s}`
+  }
 
   const showControls = useCallback(
     (autoHide = true) => {
-      setControlsVisible(true);
-      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
+      setControlsVisible(true)
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current)
       if (autoHide && isPlaying) {
-        controlsTimerRef.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_MS);
+        controlsTimerRef.current = setTimeout(() => setControlsVisible(false), CONTROLS_HIDE_MS)
       }
     },
-    [isPlaying]
-  );
+    [isPlaying],
+  )
 
   const clearRetryTimeout = () => {
     if (retryTimeoutRef.current) {
-      clearTimeout(retryTimeoutRef.current);
-      retryTimeoutRef.current = null;
+      clearTimeout(retryTimeoutRef.current)
+      retryTimeoutRef.current = null
     }
-  };
+  }
 
   const registerCleanup = (fn: () => void) => {
     const wrapped = () => {
-      fn();
-      if (cleanupRef.current === wrapped) cleanupRef.current = null;
-    };
-    cleanupRef.current = wrapped;
-    return wrapped;
-  };
+      fn()
+      if (cleanupRef.current === wrapped) cleanupRef.current = null
+    }
+    cleanupRef.current = wrapped
+    return wrapped
+  }
 
   const runCleanup = () => {
-    if (cleanupRef.current) cleanupRef.current();
-  };
+    if (cleanupRef.current) cleanupRef.current()
+  }
 
-  // faster & iOS-safe autoplay
   const tryAutoPlay = (force = false) => {
-    const video = videoRef.current;
-    if (!video) return;
+    const video = videoRef.current
+    if (!video) return
 
-    video.defaultMuted = true;
-    video.muted = true;
-    video.autoplay = true;
+    video.defaultMuted = true
+    video.muted = true
+    video.autoplay = true
 
-    if (!force && !video.paused) return;
-    if (autoplayAttemptsRef.current >= AUTOPLAY_MAX_ATTEMPTS) return;
+    if (!force && !video.paused) return
+    if (autoplayAttemptsRef.current >= AUTOPLAY_MAX_ATTEMPTS) return
 
-    autoplayAttemptsRef.current += 1;
-    const p = video.play();
+    autoplayAttemptsRef.current += 1
+    const p = video.play()
     if (p?.catch) {
       p.catch(() => {
-        setTimeout(() => tryAutoPlay(true), 140);
-      });
+        setTimeout(() => tryAutoPlay(true), 140)
+      })
     }
-  };
+  }
 
   const scheduleRetry = (reason: string) => {
-    clearRetryTimeout();
+    clearRetryTimeout()
     setRetryCount((prev) => {
       if (prev >= MAX_RETRIES) {
-        setError("An error occurred while loading the video.");
-        setLoading(false);
-        return prev;
+        setError("An error occurred while loading the video.")
+        setLoading(false)
+        return prev
       }
-      const next = prev + 1;
-      const delay = Math.min(1000 * 2 ** (next - 1), 10000);
-      setLoading(true);
+      const next = prev + 1
+      const delay = Math.min(1000 * 2 ** (next - 1), 10000)
+      setLoading(true)
       retryTimeoutRef.current = setTimeout(() => {
-        setError(null);
-        loadSource(latestSourceRef.current);
-      }, delay);
-      return next;
-    });
-  };
+        setError(null)
+        loadSource(latestSourceRef.current)
+      }, delay)
+      return next
+    })
+  }
 
   const sendHistory = useCallback(() => {
-    if (!videoRef.current || !duration || !movieId || !token) return;
-    const progress = Math.round((videoRef.current.currentTime / duration) * 100);
+    if (!videoRef.current || !duration || !movieId || !token) return
+    const progress = Math.round((videoRef.current.currentTime / duration) * 100)
     fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/history`, {
       method: "POST",
       headers: {
@@ -167,56 +164,55 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         Authorization: `Bearer ${token}`,
       },
       body: JSON.stringify({ movieId, progress }),
-    }).catch(() => {});
-  }, [duration, movieId, token]);
+    }).catch(() => {})
+  }, [duration, movieId, token])
 
-  // ---- HLS loader (reuse single instance)
   const bindVideoListeners = () => {
-    const video = videoRef.current;
-    if (!video) return () => {};
+    const video = videoRef.current
+    if (!video) return () => {}
 
-    const handleTimeUpdate = () => setCurrentTime(video.currentTime);
+    const handleTimeUpdate = () => setCurrentTime(video.currentTime)
     const handleLoadedMetadata = () => {
-      setDuration(video.duration);
-      setLoading(false);
-      tryAutoPlay(true);
-      showControls(true);
-    };
+      setDuration(video.duration)
+      setLoading(false)
+      tryAutoPlay(true)
+      showControls(true)
+    }
     const handleCanPlay = () => {
-      setLoading(false);
-      tryAutoPlay(true);
-      showControls(true);
-    };
+      setLoading(false)
+      tryAutoPlay(true)
+      showControls(true)
+    }
     const handleVolumeChange = () => {
-      setVolume(video.volume);
-      setIsMuted(video.muted);
-    };
-    const handleVideoError = () => scheduleRetry("video-error");
+      setVolume(video.volume)
+      setIsMuted(video.muted)
+    }
+    const handleVideoError = () => scheduleRetry("video-error")
 
-    video.addEventListener("timeupdate", handleTimeUpdate);
-    video.addEventListener("loadedmetadata", handleLoadedMetadata);
-    video.addEventListener("canplay", handleCanPlay);
-    video.addEventListener("volumechange", handleVolumeChange);
-    video.addEventListener("error", handleVideoError);
+    video.addEventListener("timeupdate", handleTimeUpdate)
+    video.addEventListener("loadedmetadata", handleLoadedMetadata)
+    video.addEventListener("canplay", handleCanPlay)
+    video.addEventListener("volumechange", handleVolumeChange)
+    video.addEventListener("error", handleVideoError)
 
     if (isIOS) {
-      (video as any).addEventListener?.("webkitbeginfullscreen", () => showControls(true));
-      (video as any).addEventListener?.("webkitendfullscreen", () => showControls(true));
+      ;(video as any).addEventListener?.("webkitbeginfullscreen", () => showControls(true))
+      ;(video as any).addEventListener?.("webkitendfullscreen", () => showControls(true))
     }
 
     return registerCleanup(() => {
-      video.removeEventListener("timeupdate", handleTimeUpdate);
-      video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-      video.removeEventListener("canplay", handleCanPlay);
-      video.removeEventListener("volumechange", handleVolumeChange);
-      video.removeEventListener("error", handleVideoError);
-    });
-  };
+      video.removeEventListener("timeupdate", handleTimeUpdate)
+      video.removeEventListener("loadedmetadata", handleLoadedMetadata)
+      video.removeEventListener("canplay", handleCanPlay)
+      video.removeEventListener("volumechange", handleVolumeChange)
+      video.removeEventListener("error", handleVideoError)
+    })
+  }
 
   const ensureHls = () => {
-    if (isIOS || !Hls.isSupported()) return null;
+    if (isIOS || !Hls.isSupported()) return null
 
-    let hls = hlsRef.current;
+    let hls = hlsRef.current
     if (!hls) {
       hls = new Hls({
         enableWorker: true,
@@ -224,287 +220,311 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         backBufferLength: 90,
         startLevel: -1,
         autoStartLoad: true,
-      });
-      hlsRef.current = hls;
+      })
+      hlsRef.current = hls
 
       if (!hlsHandlersBoundRef.current) {
         hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-          const filtered = data.levels.filter((lvl: { height: number }) =>
-            [360, 480, 720, 1080].includes(lvl.height)
-          );
-          setLevels(filtered);
-          setCurrentLevel(-1);
-          setLoading(false);
-          setRetryCount(0);
-          tryAutoPlay(true);
-        });
+          const filtered = data.levels.filter((lvl: { height: number }) => [360, 480, 720, 1080].includes(lvl.height))
+          setLevels(filtered)
+          setCurrentLevel(-1)
+          setLoading(false)
+          setRetryCount(0)
+          tryAutoPlay(true)
+        })
 
-        hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setCurrentLevel(data.level));
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setCurrentLevel(data.level))
 
         hls.on(Hls.Events.ERROR, (_e, data) => {
-          if (!hlsRef.current) return;
+          if (!hlsRef.current) return
           if (data.fatal) {
             switch (data.type) {
               case Hls.ErrorTypes.NETWORK_ERROR:
-                scheduleRetry("network");
-                break;
+                scheduleRetry("network")
+                break
               case Hls.ErrorTypes.MEDIA_ERROR:
                 try {
-                  hlsRef.current?.recoverMediaError();
+                  hlsRef.current?.recoverMediaError()
                 } catch {
-                  scheduleRetry("media");
+                  scheduleRetry("media")
                 }
-                break;
+                break
               default:
-                scheduleRetry("unknown-fatal");
+                scheduleRetry("unknown-fatal")
             }
           }
-        });
+        })
 
-        hlsHandlersBoundRef.current = true;
+        hlsHandlersBoundRef.current = true
       }
     }
 
-    const video = videoRef.current!;
+    const video = videoRef.current!
     if (hls.media !== video) {
-      hls.attachMedia(video);
+      hls.attachMedia(video)
     }
-    return hls;
-  };
+    return hls
+  }
 
   const loadSource = (sourceUrl = resolvedSrc) => {
-    const s = typeof sourceUrl === "string" ? sourceUrl.trim() : "";
+    const s = typeof sourceUrl === "string" ? sourceUrl.trim() : ""
     if (!s) {
-      setError("Video source missing.");
-      setLoading(false);
-      return;
+      setError("Video source missing.")
+      setLoading(false)
+      return
     }
-    const video = videoRef.current;
+    const video = videoRef.current
     if (!video) {
-      setError("Video element not found.");
-      setLoading(false);
-      return;
+      setError("Video element not found.")
+      setLoading(false)
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
 
     if (!cleanupRef.current) {
-      bindVideoListeners();
+      bindVideoListeners()
     }
 
-    // Desktop / Android: HLS.js
     if (Hls.isSupported() && !isIOS) {
-      const hls = ensureHls();
-      if (!hls) return;
+      const hls = ensureHls()
+      if (!hls) return
 
       try {
-        hls.stopLoad();
-        hls.loadSource(s);
-        hls.startLoad(-1);
-        setRetryCount(0);
-        tryAutoPlay(true);
+        hls.stopLoad()
+        hls.loadSource(s)
+        hls.startLoad(-1)
+        setRetryCount(0)
+        tryAutoPlay(true)
       } catch {
-        scheduleRetry("setup");
+        scheduleRetry("setup")
       }
-      return;
+      return
     }
 
-    // iOS / Safari: native HLS
     try {
-      video.src = s;
-      setRetryCount(0);
-      tryAutoPlay(true);
+      video.src = s
+      setRetryCount(0)
+      tryAutoPlay(true)
     } catch {
-      scheduleRetry("native-setup");
+      scheduleRetry("native-setup")
     }
-  };
+  }
 
-  // Initial + source changes
   useEffect(() => {
-    clearRetryTimeout();
-    setRetryCount(0);
-    setError(null);
-    setLoading(true);
-    loadSource(resolvedSrc);
+    clearRetryTimeout()
+    setRetryCount(0)
+    setError(null)
+    setLoading(true)
+    loadSource(resolvedSrc)
     return () => {
-      clearRetryTimeout();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [resolvedSrc]);
+      clearRetryTimeout()
+    }
+  }, [resolvedSrc])
 
-  // Fullscreen change
   useEffect(() => {
-    const fsHandler = () => showControls(true);
-    document.addEventListener("fullscreenchange", fsHandler);
-    return () => document.removeEventListener("fullscreenchange", fsHandler);
-  }, [showControls]);
+    const fsHandler = () => showControls(true)
+    document.addEventListener("fullscreenchange", fsHandler)
+    return () => document.removeEventListener("fullscreenchange", fsHandler)
+  }, [showControls])
 
-  // Unmount cleanup
   useEffect(() => {
     return () => {
-      if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
-      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+      if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+      if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current)
+      if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current)
       try {
-        hlsRef.current?.destroy();
+        hlsRef.current?.destroy()
       } catch {}
-      sendHistory();
-    };
-  }, [sendHistory]);
+      sendHistory()
+    }
+  }, [sendHistory])
 
-  // ---- playback + gestures
   const togglePlay = () => {
-    const video = videoRef.current;
-    if (!video) return;
+    const video = videoRef.current
+    if (!video) return
     if (video.paused) {
       video
         .play()
         .then(() => {
-          autoplayAttemptsRef.current = 0;
-          setIsPlaying(true);
-          if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true;
-          if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-          progressTimerRef.current = setInterval(sendHistory, 5000);
-          showControls(true);
+          autoplayAttemptsRef.current = 0
+          setIsPlaying(true)
+          if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true
+          if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+          progressTimerRef.current = setInterval(sendHistory, 5000)
+          showControls(true)
         })
-        .catch(() => setError("Playback failed. Please try again."));
+        .catch(() => setError("Playback failed. Please try again."))
     } else {
-      video.pause();
-      setIsPlaying(false);
+      video.pause()
+      setIsPlaying(false)
       if (progressTimerRef.current) {
-        clearInterval(progressTimerRef.current);
-        progressTimerRef.current = null;
+        clearInterval(progressTimerRef.current)
+        progressTimerRef.current = null
       }
-      showControls(false);
-      sendHistory();
+      showControls(false)
+      sendHistory()
     }
-  };
+  }
 
   const toggleMute = () => {
-    const video = videoRef.current;
-    if (!video) return;
-    const nextMuted = !video.muted;
-    video.muted = nextMuted;
-    setIsMuted(nextMuted);
-    showControls(true);
-  };
+    const video = videoRef.current
+    if (!video) return
+    const nextMuted = !video.muted
+    video.muted = nextMuted
+    setIsMuted(nextMuted)
+    showControls(true)
+  }
 
   const handleVolumeSliderChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const video = videoRef.current;
-    if (!video) return;
-    const v = Number.parseFloat(e.target.value);
-    const shouldMute = v === 0;
-    video.volume = v;
-    video.muted = shouldMute;
-    setVolume(v);
-    setIsMuted(shouldMute);
-    showControls(true);
-  };
+    const video = videoRef.current
+    if (!video) return
+    const v = Number.parseFloat(e.target.value)
+    const shouldMute = v === 0
+    video.volume = v
+    video.muted = shouldMute
+    setVolume(v)
+    setIsMuted(shouldMute)
+    showControls(true)
+  }
 
   const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const video = videoRef.current;
-    if (!video) return;
-    const t = Number.parseFloat(e.target.value);
-    video.currentTime = t;
-    setCurrentTime(t);
-    showControls(true);
-  };
+    const video = videoRef.current
+    if (!video) return
+    const t = Number.parseFloat(e.target.value)
+    video.currentTime = t
+    setCurrentTime(t)
+    showControls(true)
+  }
 
   const skip = useCallback(
     (seconds: number) => {
-      const video = videoRef.current;
-      if (!video || !duration) return;
-      const next = Math.max(0, Math.min(duration, video.currentTime + seconds));
-      video.currentTime = next;
-      setCurrentTime(next);
-      showControls(true);
+      const video = videoRef.current
+      if (!video || !duration) return
+      const next = Math.max(0, Math.min(duration, video.currentTime + seconds))
+      video.currentTime = next
+      setCurrentTime(next)
+      showControls(true)
     },
-    [duration, showControls]
-  );
+    [duration, showControls],
+  )
 
   const changeQuality = (level: number) => {
-    if (!hlsRef.current) return;
-    hlsRef.current.currentLevel = level;
-    setCurrentLevel(level);
-    showControls(true);
-  };
+    if (!hlsRef.current) return
+    hlsRef.current.currentLevel = level
+    setCurrentLevel(level)
+    showControls(true)
+  }
 
   const toggleFullscreen = () => {
-    const el = outerRef.current;
-    const video = videoRef.current as any;
-    if (!el || !video) return;
+    const el = outerRef.current
+    const video = videoRef.current as any
+    if (!el || !video) return
 
     if (isIOS && typeof video.webkitEnterFullscreen === "function") {
       try {
-        video.webkitEnterFullscreen();
-        showControls(true);
+        video.webkitEnterFullscreen()
+        showControls(true)
       } catch {}
-      return;
+      return
     }
 
     if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
+      document.exitFullscreen().catch(() => {})
     } else {
-      el.requestFullscreen?.().catch(() => {});
+      el.requestFullscreen?.().catch(() => {})
     }
-    showControls(true);
-  };
+    showControls(true)
+  }
 
-  // double-tap skip
   const clearSingleTapTimeout = () => {
     if (singleTapTimeoutRef.current) {
-      clearTimeout(singleTapTimeoutRef.current);
-      singleTapTimeoutRef.current = null;
+      clearTimeout(singleTapTimeoutRef.current)
+      singleTapTimeoutRef.current = null
     }
-  };
+  }
 
   const handleSkipGesture = useCallback(
     (clientX: number, rect: DOMRect) => {
-      if (!rect.width) return;
-      const isLeft = clientX - rect.left < rect.width / 2;
-      skip(isLeft ? -10 : 10);
+      if (!rect.width) return
+      const isLeft = clientX - rect.left < rect.width / 2
+      const direction: "left" | "right" = isLeft ? "left" : "right"
+      const skipAmount = isLeft ? -10 : 10
+
+      // Show visual feedback
+      const feedbackKey = Date.now().toString()
+      setSkipFeedback({ direction, key: feedbackKey })
+      setTimeout(() => {
+        setSkipFeedback((prev) => (prev?.key === feedbackKey ? null : prev))
+      }, 400)
+
+      skip(skipAmount)
     },
-    [skip]
-  );
+    [skip],
+  )
 
   const handleVideoPointerUp = (e: React.PointerEvent<HTMLVideoElement>) => {
-    if (e.pointerType === "mouse" && e.button !== 0) return;
-    const now = Date.now();
-    const rect = e.currentTarget.getBoundingClientRect();
-    const last = lastPointerRef.current;
-    const pointerType = e.pointerType || "mouse";
+    if (e.pointerType === "mouse" && e.button !== 0) return
+    const now = Date.now()
+    const rect = e.currentTarget.getBoundingClientRect()
+    const last = lastPointerRef.current
+    const pointerType = e.pointerType || "mouse"
 
-    const DOUBLE_TAP = 280;
-    const SINGLE_DELAY = 180;
-    const isDouble = last && now - last.time < DOUBLE_TAP && last.pointerType === pointerType;
+    const DOUBLE_TAP = 280
+    const SINGLE_DELAY = 180
+    const isDouble = last && now - last.time < DOUBLE_TAP && last.pointerType === pointerType
 
     if (isDouble) {
-      clearSingleTapTimeout();
-      lastPointerRef.current = null;
-      handleSkipGesture(e.clientX, rect);
+      clearSingleTapTimeout()
+      lastPointerRef.current = null
+      handleSkipGesture(e.clientX, rect)
     } else {
-      lastPointerRef.current = { time: now, pointerType };
-      clearSingleTapTimeout();
+      lastPointerRef.current = { time: now, pointerType }
+      clearSingleTapTimeout()
       singleTapTimeoutRef.current = setTimeout(() => {
-        togglePlay();
-        singleTapTimeoutRef.current = null;
-        lastPointerRef.current = null;
-      }, SINGLE_DELAY);
+        showControls(true)
+        singleTapTimeoutRef.current = null
+        lastPointerRef.current = null
+      }, SINGLE_DELAY)
     }
 
-    if (pointerType === "touch") e.preventDefault();
-  };
+    if (pointerType === "touch") e.preventDefault()
+  }
 
-  const onPointerMoveStage = () => showControls(true);
-  const onTouchStartStage = () => showControls(true);
+  useEffect(() => {
+    const handleKeyPress = (e: KeyboardEvent) => {
+      if (e.key === "ArrowLeft") {
+        e.preventDefault()
+        skip(-10)
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault()
+        skip(10)
+      }
+    }
+
+    const el = outerRef.current
+    if (el) {
+      el.addEventListener("keydown", handleKeyPress)
+      return () => el.removeEventListener("keydown", handleKeyPress)
+    }
+  }, [skip])
+
+  const onPointerMoveStage = () => showControls(true)
+  const onTouchStartStage = () => showControls(true)
   const onMouseLeaveStage = () => {
-    if (isPlaying) setControlsVisible(false);
-  };
+    if (isPlaying) setControlsVisible(false)
+  }
 
-  const volumePercent = isMuted ? 0 : volume * 100;
+  const volumePercent = isMuted ? 0 : volume * 100
 
   return (
-    <div ref={outerRef} className={`relative w-full select-none ${className}`} role="region" aria-label={title}>
+    <div
+      ref={outerRef}
+      className={`relative w-full select-none ${className}`}
+      role="region"
+      aria-label={title}
+      tabIndex={0}
+    >
       {/* Stage */}
       <div
         className="relative w-full bg-black overflow-hidden rounded-xl shadow-2xl aspect-video sm:aspect-[16/9] sm:max-h-[80vh]"
@@ -513,7 +533,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         onTouchStart={onTouchStartStage}
         onMouseLeave={onMouseLeaveStage}
       >
-        {/* Loading */}
         {loading && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
             <div className="relative h-10 w-10">
@@ -523,7 +542,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
 
-        {/* Error */}
         {error && retryCount >= MAX_RETRIES && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80">
             <div className="rounded-lg bg-neutral-800 p-6 text-center">
@@ -531,10 +549,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <button
                 type="button"
                 onClick={() => {
-                  setError(null);
-                  setRetryCount(0);
-                  setLoading(true);
-                  loadSource();
+                  setError(null)
+                  setRetryCount(0)
+                  setLoading(true)
+                  loadSource()
                 }}
                 className="rounded-full bg-neutral-700 px-6 py-2 text-white transition-colors hover:bg-neutral-600"
               >
@@ -544,7 +562,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
 
-        {/* Video: poster contain (before play), video cover (after play) */}
+        {skipFeedback && (
+          <div className="absolute inset-0 z-40 flex items-center justify-center pointer-events-none">
+            <div
+              className={`text-6xl font-bold text-white/80 animate-pulse ${
+                skipFeedback.direction === "left" ? "mr-20" : "ml-20"
+              }`}
+            >
+              {skipFeedback.direction === "left" ? "⏪ 10" : "⏩ 10+"}
+            </div>
+          </div>
+        )}
+
         <video
           ref={videoRef}
           poster={poster}
@@ -552,9 +581,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             isPlaying ? "object-cover" : "object-contain"
           }`}
           playsInline
-          // @ts-ignore vendor attrs to help iOS inline & AirPlay
           webkit-playsinline="true"
-          // @ts-ignore
           x-webkit-airplay="allow"
           autoPlay
           muted={isMuted}
@@ -562,30 +589,30 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           crossOrigin="anonymous"
           onPointerUp={handleVideoPointerUp}
           onPlay={() => {
-            autoplayAttemptsRef.current = 0;
-            setIsPlaying(true);
-            if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true;
-            if (progressTimerRef.current) clearInterval(progressTimerRef.current);
-            progressTimerRef.current = setInterval(sendHistory, 5000);
-            showControls(true);
+            autoplayAttemptsRef.current = 0
+            setIsPlaying(true)
+            if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true
+            if (progressTimerRef.current) clearInterval(progressTimerRef.current)
+            progressTimerRef.current = setInterval(sendHistory, 5000)
+            showControls(true)
           }}
           onPause={() => {
-            setIsPlaying(false);
+            setIsPlaying(false)
             if (progressTimerRef.current) {
-              clearInterval(progressTimerRef.current);
-              progressTimerRef.current = null;
+              clearInterval(progressTimerRef.current)
+              progressTimerRef.current = null
             }
-            showControls(false);
-            sendHistory();
+            showControls(false)
+            sendHistory()
           }}
           onEnded={() => {
-            setIsPlaying(false);
+            setIsPlaying(false)
             if (progressTimerRef.current) {
-              clearInterval(progressTimerRef.current);
-              progressTimerRef.current = null;
+              clearInterval(progressTimerRef.current)
+              progressTimerRef.current = null
             }
-            showControls(false);
-            sendHistory();
+            showControls(false)
+            sendHistory()
           }}
           style={{ touchAction: "manipulation", backgroundColor: "black" }}
           aria-label="Video content"
@@ -601,12 +628,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           role="toolbar"
           aria-label="Video controls"
         >
-          <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 lg:gap-3 text-white text-[12px] sm:text-sm">
+          <div className="flex flex-nowrap items-center gap-1 sm:gap-2 lg:gap-3 text-white text-[11px] sm:text-sm overflow-x-auto">
             {/* Play/Pause */}
             <button
               type="button"
               onClick={togglePlay}
-              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
               aria-label={isPlaying ? "Pause video" : "Play video"}
             >
               {isPlaying ? (
@@ -620,13 +647,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               )}
             </button>
 
-            {/* Time */}
-            <span className="hidden sm:block font-mono tabular-nums whitespace-nowrap">
+            <span className="hidden sm:block font-mono tabular-nums whitespace-nowrap text-xs sm:text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
             {/* Progress */}
-            <div className="flex min-w-[90px] sm:min-w-[120px] flex-1 items-center">
+            <div className="flex min-w-[80px] sm:min-w-[120px] flex-1 items-center">
               <div className="relative h-1.5 w-full rounded-full bg-white/20">
                 <div
                   className="absolute left-0 top-0 h-full rounded-full bg-neutral-300 transition-all duration-300 ease-linear"
@@ -646,7 +672,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </div>
 
             {/* Volume */}
-            <div className="hidden sm:flex items-center gap-2">
+            <div className="hidden sm:flex items-center gap-2 shrink-0">
               <button
                 type="button"
                 onClick={toggleMute}
@@ -655,15 +681,25 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               >
                 {isMuted || volume === 0 ? (
                   <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l4.586-4.586a2 2 0 012.828 0M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586l4.586-4.586a2 2 0 012.828 0M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728"
+                    />
                   </svg>
                 ) : (
                   <svg className="h-5 w-5 sm:h-6 sm:w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586L8 6.586A2 2 0 019.414 6H11" />
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H3a1 1 0 01-1-1V10a1 1 0 011-1h2.586L8 6.586A2 2 0 019.414 6H11"
+                    />
                   </svg>
                 )}
               </button>
-              <div className="relative h-1.5 w-24 rounded-full bg-white/20">
+              <div className="relative h-1.5 w-16 sm:w-24 rounded-full bg-white/20">
                 <div
                   className="absolute left-0 top-0 h-full rounded-full bg-neutral-300 transition-all duration-200"
                   style={{ width: `${volumePercent}%` }}
@@ -681,15 +717,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </div>
             </div>
 
-            {/* Quality */}
             {levels.length > 0 && (
               <select
                 value={currentLevel}
                 onChange={(e) => changeQuality(Number.parseInt(e.target.value, 10))}
-                className="min-w-[64px] h-9 shrink-0 cursor-pointer rounded-md border border-white/20 bg-transparent px-2 text-[12px] sm:text-sm text-white/90 focus:outline-none focus:ring-1 focus:ring-white/30"
+                className="shrink-0 h-8 sm:h-9 px-1.5 sm:px-2 text-[10px] sm:text-sm rounded-md border border-white/20 bg-transparent text-white/90 focus:outline-none focus:ring-1 focus:ring-white/30 cursor-pointer"
                 aria-label="Select video quality"
               >
-                <option value="-1" className="bg-neutral-900">Auto</option>
+                <option value="-1" className="bg-neutral-900">
+                  Auto
+                </option>
                 {levels.map((level, index) => (
                   <option key={index} value={index} className="bg-neutral-900">
                     {qualityLabels[level.height] || `${level.height}p`}
@@ -706,14 +743,19 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               aria-label="Toggle fullscreen"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4" />
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 8V4m0 0h4M4 4l5 5m11-1V4m0 0h-4m4 0l-5 5M4 16v4m0 0h4m-4 0l5-5m11 5l-5-5m5 5v-4m0 4h-4"
+                />
               </svg>
             </button>
           </div>
         </div>
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default VideoPlayer;
+export default VideoPlayer

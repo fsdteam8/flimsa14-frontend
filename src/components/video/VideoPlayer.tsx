@@ -38,9 +38,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestSourceRef = useRef("");
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
-  const singleTapTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastPointerRef = useRef<{ time: number; pointerType: string } | null>(null);
+  const lastTapRef = useRef<{ time: number; x: number } | null>(null);
   const hideUiTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const posterDismissedRef = useRef(false);
 
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
@@ -54,12 +54,13 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   latestSourceRef.current = resolvedSrc;
 
   // UI state
+  const [posterActive, setPosterActive] = useState(Boolean(poster));
   const [loading, setLoading] = useState(true);
   const [fatalError, setFatalError] = useState<string | null>(null);
   const [retryCount, setRetryCount] = useState(0);
 
   const [isPlaying, setIsPlaying] = useState(false);
-  const [isMuted, setIsMuted] = useState(false); // ✨ start unmuted
+  const [isMuted, setIsMuted] = useState(false); // start unmuted
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [levels, setLevels] = useState<Array<{ height: number }>>([]);
@@ -76,6 +77,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     return `${m}:${s < 10 ? `0${s}` : s}`;
   };
 
+  const hidePosterOverlay = () => {
+    if (posterDismissedRef.current) return;
+    posterDismissedRef.current = true;
+    setPosterActive(false);
+  };
+
   // Attempt to play with sound; if blocked by policy, require user gesture
   const tryPlayWithSound = async () => {
     const video = videoRef.current;
@@ -84,6 +91,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     setIsMuted(false);
     try {
       await video.play();
+      hidePosterOverlay();
       setIsPlaying(true);
       setGestureRequired(false);
     } catch {
@@ -351,11 +359,32 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const onActivity = () => showControls();
     const onFsChange = () => showControls();
 
+    // Keyboard controls (desktop): ArrowLeft/ArrowRight skip ±10s
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      // ignore when typing in inputs/textareas
+      if (target && (target.tagName === "INPUT" || target.tagName === "TEXTAREA" || target.isContentEditable)) {
+        return;
+      }
+      if (e.key === "ArrowLeft") {
+        e.preventDefault();
+        skip(-10);
+        showControls();
+      } else if (e.key === "ArrowRight") {
+        e.preventDefault();
+        skip(10);
+        showControls();
+      } else if (e.key === " ") { // space toggles via button equivalently
+        e.preventDefault();
+        togglePlay();
+      }
+    };
+
     el.addEventListener("mousemove", onActivity);
     el.addEventListener("pointermove", onActivity);
     el.addEventListener("touchstart", onActivity, { passive: true });
     el.addEventListener("click", onActivity);
-    document.addEventListener("keydown", onActivity);
+    document.addEventListener("keydown", onKeyDown);
     document.addEventListener("fullscreenchange", onFsChange);
 
     return () => {
@@ -363,7 +392,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       el.removeEventListener("pointermove", onActivity);
       el.removeEventListener("touchstart", onActivity);
       el.removeEventListener("click", onActivity);
-      document.removeEventListener("keydown", onActivity);
+      document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("fullscreenchange", onFsChange);
     };
   }, [showControls]);
@@ -388,7 +417,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           showControls();
         })
         .catch(() => {
-          // Keep overlay; user may need to tap the big play
           setGestureRequired(true);
           setIsPlaying(false);
           showControls();
@@ -418,7 +446,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (!video) return;
     const newVol = Number.parseFloat(e.target.value);
     video.volume = newVol;
-    // Only mute if volume is exactly 0; otherwise never flip mute on seek/drag
     const shouldMute = newVol === 0;
     video.muted = shouldMute;
     setVolume(newVol);
@@ -432,7 +459,6 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     const newTime = Number.parseFloat(e.target.value);
     video.currentTime = newTime;
     setCurrentTime(newTime);
-    // ❗ Never touch mute here
     showControls();
   };
 
@@ -465,56 +491,52 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     showControls();
   };
 
-  // Gestures: single tap toggles play, double tap skips ±10s
-  const clearSingleTapTimeout = () => {
-    if (singleTapTimeoutRef.current) {
-      clearTimeout(singleTapTimeoutRef.current);
-      singleTapTimeoutRef.current = null;
-    }
-  };
-
+  // Gestures (touch only): single tap shows controls; double tap skips ±10s
   const handleVideoPointerUp = (event: React.PointerEvent<HTMLVideoElement>) => {
-    //eslint-disable-next-line @typescript-eslint/no-explicit-any
-    if (event.pointerType === "mouse" && (event as any).button !== 0) return;
+    // For mouse/pen clicks: never toggle play, just show controls
+    if (event.pointerType !== "touch") {
+      showControls();
+      return;
+    }
+
     const now = Date.now();
     const rect = event.currentTarget.getBoundingClientRect();
-    const last = lastPointerRef.current;
-    const pointerType = event.pointerType || "mouse";
 
+    const last = lastTapRef.current;
     const DOUBLE_TAP_THRESHOLD = 280;
-    const SINGLE_TAP_DELAY = 180;
-    const isDoubleTap =
-      last && now - last.time < DOUBLE_TAP_THRESHOLD && last.pointerType === pointerType;
 
-    if (isDoubleTap) {
-      clearSingleTapTimeout();
-      lastPointerRef.current = null;
+    if (last && now - last.time < DOUBLE_TAP_THRESHOLD) {
+      // Double tap -> skip
       const isLeftHalf = event.clientX - rect.left < rect.width / 2;
       skip(isLeftHalf ? -10 : 10);
+      lastTapRef.current = null;
     } else {
-      lastPointerRef.current = { time: now, pointerType };
-      clearSingleTapTimeout();
-      singleTapTimeoutRef.current = setTimeout(() => {
-        togglePlay();
-        singleTapTimeoutRef.current = null;
-        lastPointerRef.current = null;
-      }, SINGLE_TAP_DELAY);
+      // Single tap -> only reveal controls (no play/pause)
+      lastTapRef.current = { time: now, x: event.clientX };
+      showControls();
+      // Clear if no second tap arrives
+      setTimeout(() => {
+        if (lastTapRef.current && Date.now() - lastTapRef.current.time >= DOUBLE_TAP_THRESHOLD) {
+          lastTapRef.current = null;
+        }
+      }, DOUBLE_TAP_THRESHOLD + 20);
     }
 
-    if (pointerType === "touch") {
-      event.preventDefault();
-    }
-    showControls();
+    event.preventDefault();
   };
 
   useEffect(() => {
     return () => {
-      clearSingleTapTimeout();
       if (hideUiTimerRef.current) clearTimeout(hideUiTimerRef.current);
     };
   }, []);
 
-  // const progressPercent = duration ? (currentTime / duration) * 100 : 0;
+  useEffect(() => {
+    if (!posterDismissedRef.current) {
+      setPosterActive(Boolean(poster));
+    }
+  }, [poster]);
+
   const volumePercent = isMuted ? 0 : volume * 100;
   const hideCursor = isPlaying && !loading && !controlsVisible;
 
@@ -574,21 +596,35 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         </button>
       )}
 
+      {/* Poster overlay shown once before the first playback */}
+      {posterActive && poster && (
+        <div
+          className="pointer-events-none absolute inset-0 z-10 overflow-hidden"
+          aria-hidden="true"
+        >
+          <div
+            className="absolute inset-0 bg-center bg-cover"
+            style={{ backgroundImage: `url(${poster})` }}
+          />
+          <div className="absolute inset-0 bg-black/20" />
+        </div>
+      )}
+
       {/* Video */}
       <video
         ref={videoRef}
-        poster={poster}
+        poster={posterActive ? poster : undefined}
         className={`aspect-video w-full object-cover transition-opacity duration-300 ${
           loading ? "opacity-0" : "opacity-100"
         }`}
         playsInline
-        // We still leave autoPlay attribute; browser will ignore if blocked.
         autoPlay
         muted={isMuted}
         preload="auto"
         crossOrigin="anonymous"
         onPointerUp={handleVideoPointerUp}
         onPlay={() => {
+          hidePosterOverlay();
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
@@ -627,7 +663,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       >
         <div className="bg-gradient-to-t from-black/80 via-black/40 to-transparent px-3 md:px-4 pt-16 pb-3">
           <div
-            className="flex items-center gap-2 md:gap-3 text-white text-sm"
+            className="flex items-center gap-2 md:gap-3 text-white text-sm flex-nowrap min-w-0"
             role="toolbar"
             aria-label="Video controls"
           >
@@ -650,12 +686,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             </button>
 
             {/* Time */}
-            <span className="font-mono text-xs md:text-sm tabular-nums">
+            <span className="font-mono tabular-nums whitespace-nowrap text-[10px] md:text-sm">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
             {/* Progress */}
-            <div className="flex min-w-[120px] flex-1 items-center">
+            <div className="flex min-w-[80px] flex-1 items-center">
               <div className="relative h-2 w-full rounded-full bg-white/20">
                 <div
                   className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-linear"
@@ -725,7 +761,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <select
                 value={currentLevel}
                 onChange={(e) => changeQuality(Number.parseInt(e.target.value, 10))}
-                className="min-w-[92px] shrink-0 cursor-pointer rounded-md border border-white/10 bg-black/60 px-3 py-2 text-xs md:text-sm text-white transition-colors hover:bg-black/80"
+                className="min-w-[64px] md:min-w-[92px] shrink-0 cursor-pointer rounded-md border border-white/10 bg-black/60 px-2 py-1 text-[10px] md:px-3 md:py-2 md:text-sm text-white transition-colors hover:bg-black/80"
                 aria-label="Select video quality"
               >
                 <option value="-1">{qualityLabels[-1]}</option>
