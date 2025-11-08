@@ -83,3 +83,27 @@ body {
     --chart-5: 340 75% 55%;
   }
 }
+
+/* Modern dark scrollbar for containers using the .modern-scrollbar class */
+
+/* Firefox */
+.modern-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #4b5563 #0a0a0a; /* thumb, track (neutral-600, near-black) */
+}
+
+/* Chrome/Edge/Safari */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 10px;
+}
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: #0a0a0a;
+}
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: #4b5563;         /* neutral-600 */
+  border-radius: 9999px;
+  border: 2px solid #0a0a0a;   /* creates a pill gap */
+}
+.modern-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;         /* neutral-500 */
+}

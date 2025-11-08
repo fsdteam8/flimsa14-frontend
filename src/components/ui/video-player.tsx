@@ -22,7 +22,7 @@ const qualityLabels: Record<string | number, string> = {
 };
 
 const MAX_RETRIES = 4;
-const AUTOPLAY_MAX_ATTEMPTS = 3;
+const AUTOPLAY_MAX_ATTEMPTS = 4;
 const CONTROLS_HIDE_MS = 3000;
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
@@ -35,7 +35,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const outerRef = useRef<HTMLDivElement>(null);
+
   const hlsRef = useRef<Hls | null>(null);
+  const hlsHandlersBoundRef = useRef(false);
+
   const cleanupRef = useRef<(() => void) | null>(null);
   const retryTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const latestSourceRef = useRef("");
@@ -45,8 +48,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   const lastPointerRef = useRef<{ time: number; pointerType: string } | null>(null);
   const controlsTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const firstPlaybackDoneRef = useRef(false); // used if you want to hide poster after first ever play
+
   const { data: session } = useSession();
   const token = session?.user?.accessToken;
+
+  const isIOS = useMemo(
+    () => typeof navigator !== "undefined" && /iP(ad|hone|od)/i.test(navigator.userAgent),
+    []
+  );
 
   const resolvedSrc = useMemo(() => {
     if (typeof src === "string" && src.trim()) return src.trim();
@@ -107,22 +117,23 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (cleanupRef.current) cleanupRef.current();
   };
 
-  const tryAutoPlay = () => {
+  // faster & iOS-safe autoplay
+  const tryAutoPlay = (force = false) => {
     const video = videoRef.current;
     if (!video) return;
+
     video.defaultMuted = true;
     video.muted = true;
     video.autoplay = true;
-    if (!video.paused) return;
+
+    if (!force && !video.paused) return;
     if (autoplayAttemptsRef.current >= AUTOPLAY_MAX_ATTEMPTS) return;
 
     autoplayAttemptsRef.current += 1;
     const p = video.play();
     if (p?.catch) {
       p.catch(() => {
-        if (autoplayAttemptsRef.current < AUTOPLAY_MAX_ATTEMPTS) {
-          setTimeout(tryAutoPlay, 500);
-        }
+        setTimeout(() => tryAutoPlay(true), 140);
       });
     }
   };
@@ -140,8 +151,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       setLoading(true);
       retryTimeoutRef.current = setTimeout(() => {
         setError(null);
-        runCleanup();
-        initHls(latestSourceRef.current);
+        loadSource(latestSourceRef.current);
       }, delay);
       return next;
     });
@@ -160,31 +170,27 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }).catch(() => {});
   }, [duration, movieId, token]);
 
-  // ---- HLS init
-  const initHls = (sourceUrl = resolvedSrc) => {
-    const s = typeof sourceUrl === "string" ? sourceUrl.trim() : "";
-    if (!s) {
-      setError("Video source missing.");
-      setLoading(false);
-      return;
-    }
-
+  // ---- HLS loader (reuse single instance)
+  const bindVideoListeners = () => {
     const video = videoRef.current;
-    if (!video) {
-      setError("Video element not found.");
-      setLoading(false);
-      return;
-    }
-
-    if (hlsRef.current) {
-      try { hlsRef.current.destroy(); } catch {}
-      hlsRef.current = null;
-    }
+    if (!video) return () => {};
 
     const handleTimeUpdate = () => setCurrentTime(video.currentTime);
-    const handleLoadedMetadata = () => { setDuration(video.duration); setLoading(false); };
-    const handleCanPlay = () => { setLoading(false); tryAutoPlay(); };
-    const handleVolumeChange = () => { setVolume(video.volume); setIsMuted(video.muted); };
+    const handleLoadedMetadata = () => {
+      setDuration(video.duration);
+      setLoading(false);
+      tryAutoPlay(true);
+      showControls(true);
+    };
+    const handleCanPlay = () => {
+      setLoading(false);
+      tryAutoPlay(true);
+      showControls(true);
+    };
+    const handleVolumeChange = () => {
+      setVolume(video.volume);
+      setIsMuted(video.muted);
+    };
     const handleVideoError = () => scheduleRetry("video-error");
 
     video.addEventListener("timeupdate", handleTimeUpdate);
@@ -193,81 +199,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     video.addEventListener("volumechange", handleVolumeChange);
     video.addEventListener("error", handleVideoError);
 
-    if (Hls.isSupported()) {
-      const hls = new Hls({
-        enableWorker: true,
-        lowLatencyMode: true,
-        backBufferLength: 90,
-        startLevel: -1,
-        autoStartLoad: true,
-      });
-      hlsRef.current = hls;
-
-      try {
-        hls.attachMedia(video);
-        hls.loadSource(s);
-
-        hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
-          const filtered = data.levels.filter((lvl: { height: number }) =>
-            [360, 480, 720, 1080].includes(lvl.height)
-          );
-          setLevels(filtered);
-          setCurrentLevel(-1);
-          setLoading(false);
-          setRetryCount(0);
-          tryAutoPlay();
-        });
-
-        hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setCurrentLevel(data.level));
-
-        hls.on(Hls.Events.ERROR, (_e, data) => {
-          if (!hlsRef.current) return;
-          if (data.fatal) {
-            switch (data.type) {
-              case Hls.ErrorTypes.NETWORK_ERROR: scheduleRetry("network"); break;
-              case Hls.ErrorTypes.MEDIA_ERROR:
-                try { hlsRef.current?.recoverMediaError(); } catch { scheduleRetry("media"); }
-                break;
-              default: scheduleRetry("unknown-fatal");
-            }
-          }
-        });
-      } catch {
-        scheduleRetry("setup");
-      }
-
-      return registerCleanup(() => {
-        video.removeEventListener("timeupdate", handleTimeUpdate);
-        video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        video.removeEventListener("canplay", handleCanPlay);
-        video.removeEventListener("volumechange", handleVolumeChange);
-        video.removeEventListener("error", handleVideoError);
-        if (hlsRef.current) { try { hlsRef.current.destroy(); } catch {} hlsRef.current = null; }
-      });
+    if (isIOS) {
+      (video as any).addEventListener?.("webkitbeginfullscreen", () => showControls(true));
+      (video as any).addEventListener?.("webkitendfullscreen", () => showControls(true));
     }
 
-    // Native HLS (Safari)
-    if (video.canPlayType("application/vnd.apple.mpegurl")) {
-      video.src = s;
-      const onLoadedMetadata = () => { setLoading(false); setLevels([]); setRetryCount(0); tryAutoPlay(); };
-      const onError = () => scheduleRetry("native-hls-error");
-      video.addEventListener("loadedmetadata", onLoadedMetadata);
-      video.addEventListener("error", onError);
-
-      return registerCleanup(() => {
-        video.removeEventListener("timeupdate", handleTimeUpdate);
-        video.removeEventListener("loadedmetadata", handleLoadedMetadata);
-        video.removeEventListener("canplay", handleCanPlay);
-        video.removeEventListener("volumechange", handleVolumeChange);
-        video.removeEventListener("error", handleVideoError);
-        video.removeEventListener("loadedmetadata", onLoadedMetadata);
-        video.removeEventListener("error", onError);
-      });
-    }
-
-    setError("Your browser does not support HLS playback.");
-    setRetryCount(MAX_RETRIES);
-    setLoading(false);
     return registerCleanup(() => {
       video.removeEventListener("timeupdate", handleTimeUpdate);
       video.removeEventListener("loadedmetadata", handleLoadedMetadata);
@@ -277,27 +213,141 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     });
   };
 
-  // ---- effects
+  const ensureHls = () => {
+    if (isIOS || !Hls.isSupported()) return null;
+
+    let hls = hlsRef.current;
+    if (!hls) {
+      hls = new Hls({
+        enableWorker: true,
+        lowLatencyMode: true,
+        backBufferLength: 90,
+        startLevel: -1,
+        autoStartLoad: true,
+      });
+      hlsRef.current = hls;
+
+      if (!hlsHandlersBoundRef.current) {
+        hls.on(Hls.Events.MANIFEST_PARSED, (_e, data) => {
+          const filtered = data.levels.filter((lvl: { height: number }) =>
+            [360, 480, 720, 1080].includes(lvl.height)
+          );
+          setLevels(filtered);
+          setCurrentLevel(-1);
+          setLoading(false);
+          setRetryCount(0);
+          tryAutoPlay(true);
+        });
+
+        hls.on(Hls.Events.LEVEL_SWITCHED, (_e, data) => setCurrentLevel(data.level));
+
+        hls.on(Hls.Events.ERROR, (_e, data) => {
+          if (!hlsRef.current) return;
+          if (data.fatal) {
+            switch (data.type) {
+              case Hls.ErrorTypes.NETWORK_ERROR:
+                scheduleRetry("network");
+                break;
+              case Hls.ErrorTypes.MEDIA_ERROR:
+                try {
+                  hlsRef.current?.recoverMediaError();
+                } catch {
+                  scheduleRetry("media");
+                }
+                break;
+              default:
+                scheduleRetry("unknown-fatal");
+            }
+          }
+        });
+
+        hlsHandlersBoundRef.current = true;
+      }
+    }
+
+    const video = videoRef.current!;
+    if (hls.media !== video) {
+      hls.attachMedia(video);
+    }
+    return hls;
+  };
+
+  const loadSource = (sourceUrl = resolvedSrc) => {
+    const s = typeof sourceUrl === "string" ? sourceUrl.trim() : "";
+    if (!s) {
+      setError("Video source missing.");
+      setLoading(false);
+      return;
+    }
+    const video = videoRef.current;
+    if (!video) {
+      setError("Video element not found.");
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    if (!cleanupRef.current) {
+      bindVideoListeners();
+    }
+
+    // Desktop / Android: HLS.js
+    if (Hls.isSupported() && !isIOS) {
+      const hls = ensureHls();
+      if (!hls) return;
+
+      try {
+        hls.stopLoad();
+        hls.loadSource(s);
+        hls.startLoad(-1);
+        setRetryCount(0);
+        tryAutoPlay(true);
+      } catch {
+        scheduleRetry("setup");
+      }
+      return;
+    }
+
+    // iOS / Safari: native HLS
+    try {
+      video.src = s;
+      setRetryCount(0);
+      tryAutoPlay(true);
+    } catch {
+      scheduleRetry("native-setup");
+    }
+  };
+
+  // Initial + source changes
   useEffect(() => {
     clearRetryTimeout();
     setRetryCount(0);
     setError(null);
     setLoading(true);
-    const cleanup = initHls(resolvedSrc);
-    return () => { clearRetryTimeout(); if (cleanup) cleanup(); };
+    loadSource(resolvedSrc);
+    return () => {
+      clearRetryTimeout();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resolvedSrc]);
 
+  // Fullscreen change
   useEffect(() => {
     const fsHandler = () => showControls(true);
     document.addEventListener("fullscreenchange", fsHandler);
     return () => document.removeEventListener("fullscreenchange", fsHandler);
   }, [showControls]);
 
+  // Unmount cleanup
   useEffect(() => {
     return () => {
       if (progressTimerRef.current) clearInterval(progressTimerRef.current);
       if (controlsTimerRef.current) clearTimeout(controlsTimerRef.current);
       if (singleTapTimeoutRef.current) clearTimeout(singleTapTimeoutRef.current);
+      try {
+        hlsRef.current?.destroy();
+      } catch {}
       sendHistory();
     };
   }, [sendHistory]);
@@ -312,6 +362,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         .then(() => {
           autoplayAttemptsRef.current = 0;
           setIsPlaying(true);
+          if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true;
           if (progressTimerRef.current) clearInterval(progressTimerRef.current);
           progressTimerRef.current = setInterval(sendHistory, 5000);
           showControls(true);
@@ -320,7 +371,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     } else {
       video.pause();
       setIsPlaying(false);
-      if (progressTimerRef.current) { clearInterval(progressTimerRef.current); progressTimerRef.current = null; }
+      if (progressTimerRef.current) {
+        clearInterval(progressTimerRef.current);
+        progressTimerRef.current = null;
+      }
       showControls(false);
       sendHistory();
     }
@@ -356,14 +410,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     showControls(true);
   };
 
-  const skip = useCallback((seconds: number) => {
-    const video = videoRef.current;
-    if (!video || !duration) return;
-    const next = Math.max(0, Math.min(duration, video.currentTime + seconds));
-    video.currentTime = next;
-    setCurrentTime(next);
-    showControls(true);
-  }, [duration, showControls]);
+  const skip = useCallback(
+    (seconds: number) => {
+      const video = videoRef.current;
+      if (!video || !duration) return;
+      const next = Math.max(0, Math.min(duration, video.currentTime + seconds));
+      video.currentTime = next;
+      setCurrentTime(next);
+      showControls(true);
+    },
+    [duration, showControls]
+  );
 
   const changeQuality = (level: number) => {
     if (!hlsRef.current) return;
@@ -373,11 +430,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const toggleFullscreen = () => {
-    if (!outerRef.current) return;
+    const el = outerRef.current;
+    const video = videoRef.current as any;
+    if (!el || !video) return;
+
+    if (isIOS && typeof video.webkitEnterFullscreen === "function") {
+      try {
+        video.webkitEnterFullscreen();
+        showControls(true);
+      } catch {}
+      return;
+    }
+
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     } else {
-      outerRef.current.requestFullscreen().catch(() => {});
+      el.requestFullscreen?.().catch(() => {});
     }
     showControls(true);
   };
@@ -390,11 +458,14 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     }
   };
 
-  const handleSkipGesture = useCallback((clientX: number, rect: DOMRect) => {
-    if (!rect.width) return;
-    const isLeft = clientX - rect.left < rect.width / 2;
-    skip(isLeft ? -10 : 10);
-  }, [skip]);
+  const handleSkipGesture = useCallback(
+    (clientX: number, rect: DOMRect) => {
+      if (!rect.width) return;
+      const isLeft = clientX - rect.left < rect.width / 2;
+      skip(isLeft ? -10 : 10);
+    },
+    [skip]
+  );
 
   const handleVideoPointerUp = (e: React.PointerEvent<HTMLVideoElement>) => {
     if (e.pointerType === "mouse" && e.button !== 0) return;
@@ -426,13 +497,15 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
   const onPointerMoveStage = () => showControls(true);
   const onTouchStartStage = () => showControls(true);
-  const onMouseLeaveStage = () => { if (isPlaying) setControlsVisible(false); };
+  const onMouseLeaveStage = () => {
+    if (isPlaying) setControlsVisible(false);
+  };
 
   const volumePercent = isMuted ? 0 : volume * 100;
 
   return (
     <div ref={outerRef} className={`relative w-full select-none ${className}`} role="region" aria-label={title}>
-      {/* Stage: the only wrapper controlling height → no extra black bar */}
+      {/* Stage */}
       <div
         className="relative w-full bg-black overflow-hidden rounded-xl shadow-2xl aspect-video sm:aspect-[16/9] sm:max-h-[80vh]"
         style={{ minHeight: "clamp(200px, 40vh, 420px)" }}
@@ -442,10 +515,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       >
         {/* Loading */}
         {loading && (
-          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/50 backdrop-blur-[1px]">
+          <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
             <div className="relative h-10 w-10">
               <div className="absolute inset-0 rounded-full border-2 border-white/15" />
-              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-blue-500 animate-spin" />
+              <div className="absolute inset-0 rounded-full border-2 border-transparent border-t-neutral-400 animate-spin" />
             </div>
           </div>
         )}
@@ -453,12 +526,17 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         {/* Error */}
         {error && retryCount >= MAX_RETRIES && (
           <div className="absolute inset-0 z-20 flex items-center justify-center bg-black/80">
-            <div className="rounded-lg bg-gray-800 p-6 text-center">
+            <div className="rounded-lg bg-neutral-800 p-6 text-center">
               <p className="mb-4 text-lg text-red-400">{error}</p>
               <button
                 type="button"
-                onClick={() => { setError(null); setRetryCount(0); setLoading(true); initHls(); }}
-                className="rounded-full bg-blue-600 px-6 py-2 text-white transition-colors hover:bg-blue-700"
+                onClick={() => {
+                  setError(null);
+                  setRetryCount(0);
+                  setLoading(true);
+                  loadSource();
+                }}
+                className="rounded-full bg-neutral-700 px-6 py-2 text-white transition-colors hover:bg-neutral-600"
               >
                 Retry
               </button>
@@ -466,12 +544,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           </div>
         )}
 
-        {/* Video */}
+        {/* Video: poster contain (before play), video cover (after play) */}
         <video
           ref={videoRef}
           poster={poster}
-          className={`absolute inset-0 h-full w-full object-contain transition-opacity duration-300 ${loading ? "opacity-0" : "opacity-100"}`}
+          className={`absolute inset-0 h-full w-full transition-opacity duration-150 ${
+            isPlaying ? "object-cover" : "object-contain"
+          }`}
           playsInline
+          // @ts-ignore vendor attrs to help iOS inline & AirPlay
+          webkit-playsinline="true"
+          // @ts-ignore
+          x-webkit-airplay="allow"
           autoPlay
           muted={isMuted}
           preload="auto"
@@ -480,19 +564,26 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           onPlay={() => {
             autoplayAttemptsRef.current = 0;
             setIsPlaying(true);
+            if (!firstPlaybackDoneRef.current) firstPlaybackDoneRef.current = true;
             if (progressTimerRef.current) clearInterval(progressTimerRef.current);
             progressTimerRef.current = setInterval(sendHistory, 5000);
             showControls(true);
           }}
           onPause={() => {
             setIsPlaying(false);
-            if (progressTimerRef.current) { clearInterval(progressTimerRef.current); progressTimerRef.current = null; }
+            if (progressTimerRef.current) {
+              clearInterval(progressTimerRef.current);
+              progressTimerRef.current = null;
+            }
             showControls(false);
             sendHistory();
           }}
           onEnded={() => {
             setIsPlaying(false);
-            if (progressTimerRef.current) { clearInterval(progressTimerRef.current); progressTimerRef.current = null; }
+            if (progressTimerRef.current) {
+              clearInterval(progressTimerRef.current);
+              progressTimerRef.current = null;
+            }
             showControls(false);
             sendHistory();
           }}
@@ -502,17 +593,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           Your browser does not support the video tag.
         </video>
 
-        {/* Controls (auto-hide) */}
+        {/* Controls */}
         <div
-          className={`absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-2 md:px-3 lg:px-4 pb-3 pt-6 transition-opacity duration-300 ${controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"}`}
+          className={`absolute inset-x-0 bottom-0 z-30 bg-gradient-to-t from-black/70 via-black/30 to-transparent px-2 md:px-3 lg:px-4 pb-2.5 pt-5 transition-opacity duration-300 ${
+            controlsVisible ? "opacity-100" : "opacity-0 pointer-events-none"
+          }`}
           role="toolbar"
           aria-label="Video controls"
         >
-          <div className="flex flex-wrap items-center gap-2 lg:gap-3 text-white text-xs sm:text-sm">
+          <div className="flex flex-nowrap items-center gap-1.5 sm:gap-2 lg:gap-3 text-white text-[12px] sm:text-sm">
+            {/* Play/Pause */}
             <button
               type="button"
               onClick={togglePlay}
-              className="flex h-10 w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="flex h-9 w-9 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
               aria-label={isPlaying ? "Pause video" : "Play video"}
             >
               {isPlaying ? (
@@ -526,15 +620,16 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               )}
             </button>
 
-            <span className="hidden font-mono text-[13px] tabular-nums sm:block sm:text-sm">
+            {/* Time */}
+            <span className="hidden sm:block font-mono tabular-nums whitespace-nowrap">
               {formatTime(currentTime)} / {formatTime(duration)}
             </span>
 
             {/* Progress */}
-            <div className="flex min-w-[100px] flex-1 items-center">
+            <div className="flex min-w-[90px] sm:min-w-[120px] flex-1 items-center">
               <div className="relative h-1.5 w-full rounded-full bg-white/20">
                 <div
-                  className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-300 ease-linear"
+                  className="absolute left-0 top-0 h-full rounded-full bg-neutral-300 transition-all duration-300 ease-linear"
                   style={{ width: `${duration ? (currentTime / duration) * 100 : 0}%` }}
                 />
                 <input
@@ -550,12 +645,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               </div>
             </div>
 
-            {/* Volume (hidden on very small screens) */}
-            <div className="hidden items-center gap-2 sm:flex">
+            {/* Volume */}
+            <div className="hidden sm:flex items-center gap-2">
               <button
                 type="button"
                 onClick={toggleMute}
-                className="text-white transition hover:text-blue-400"
+                className="text-white transition hover:text-neutral-300"
                 aria-label={isMuted || volume === 0 ? "Unmute video" : "Mute video"}
               >
                 {isMuted || volume === 0 ? (
@@ -568,10 +663,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
                   </svg>
                 )}
               </button>
-              <div className="relative h-1.5 w-20 rounded-full bg-white/20 sm:w-28">
+              <div className="relative h-1.5 w-24 rounded-full bg-white/20">
                 <div
-                  className="absolute left-0 top-0 h-full rounded-full bg-gradient-to-r from-blue-500 to-blue-600 transition-all duration-200"
-                  style={{ width: `${isMuted ? 0 : volume * 100}%` }}
+                  className="absolute left-0 top-0 h-full rounded-full bg-neutral-300 transition-all duration-200"
+                  style={{ width: `${volumePercent}%` }}
                 />
                 <input
                   type="range"
@@ -591,12 +686,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
               <select
                 value={currentLevel}
                 onChange={(e) => changeQuality(Number.parseInt(e.target.value, 10))}
-                className="min-w-[90px] shrink-0 cursor-pointer rounded-md border border-white/10 bg-black/60 px-3 py-1 text-xs text-white transition-colors hover:bg-black/80 sm:text-sm"
+                className="min-w-[64px] h-9 shrink-0 cursor-pointer rounded-md border border-white/20 bg-transparent px-2 text-[12px] sm:text-sm text-white/90 focus:outline-none focus:ring-1 focus:ring-white/30"
                 aria-label="Select video quality"
               >
-                <option value="-1">{qualityLabels[-1]}</option>
+                <option value="-1" className="bg-neutral-900">Auto</option>
                 {levels.map((level, index) => (
-                  <option key={index} value={index}>
+                  <option key={index} value={index} className="bg-neutral-900">
                     {qualityLabels[level.height] || `${level.height}p`}
                   </option>
                 ))}
@@ -607,7 +702,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             <button
               type="button"
               onClick={toggleFullscreen}
-              className="ml-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-500"
+              className="ml-auto flex h-9 w-9 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-full bg-white/10 text-white transition hover:bg-white/20 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400"
               aria-label="Toggle fullscreen"
             >
               <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
