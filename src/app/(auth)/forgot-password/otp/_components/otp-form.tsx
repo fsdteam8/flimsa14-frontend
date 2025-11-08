@@ -155,20 +155,27 @@ export default function OtpForm() {
       <div className="w-screen md:w-[570px] py-6 md:py-7 lg:py-8 px-4 md:px-5 lg:px-6 rounded-[16px] bg-white border-0">
         <div className="flex flex-col items-center">
           <Link href="/">
-              <Image
+            {/* <Image
                          src="/assets/images/azlo-logo.svg"
                          alt="Logo"
                          width={113}
                          height={400}
                          className="w-auto h-[80px] object-cover cursor-pointer"
-                       />
+                       /> */}
+            <Image
+              src="/assets/images/logo.png"
+              alt="Logo"
+              width={500}
+              height={500}
+              className="w-auto h-[120px] object-cover cursor-pointer brightness-0 scale-125"
+            />
           </Link>
           <h3 className="text-xl md:text-2xl lg:text-3xl font-semibold text-black leading-[120%] text-center pb-4 md:pb-5 pt-3 md:pt-4 lg:pt-5">
             Verify OTP
           </h3>
           <p className="text-base font-normal text-black leading-[120%] text-center pb-4">
-            Please check your Email for a message with your code. <br className="hidden md:block"/> Your
-            code is 6 numbers long.
+            Please check your Email for a message with your code.{" "}
+            <br className="hidden md:block" /> Your code is 6 numbers long.
           </p>
         </div>
         <div className="pt-3 md:pt-4">

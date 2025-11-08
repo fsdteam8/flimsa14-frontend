@@ -108,35 +108,84 @@ const SearchContainer: React.FC = () => {
 
           {/* cart data  */}
           <div className="container mx-auto">
+            {/* movies  */}
             <div className="p-6 w-full">
               {movies?.length > 0 ? (
-                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-6">
-                  {movies.map((movie) => (
-                    <div
-                      key={movie._id}
-                      onClick={() => {
-                        setIsOpen(true);
-                        setSelectedVideoId(movie._id);
-                      }}
-                      className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-900"
-                    >
+                <>
+                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center pb-6">
+                    Movies List
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {movies.map((movie) => (
                       <div
-                        className="h-[300px] bg-cover bg-center transition-transform hover:scale-105 duration-300"
-                        style={{
-                          backgroundImage: `url(${movie.thumbnailUrl})`,
+                        key={movie._id}
+                        onClick={() => {
+                          setIsOpen(true);
+                          setSelectedVideoId(movie._id);
                         }}
-                      ></div>
-                      <div className="p-4">
-                        <h3 className="text-lg font-semibold text-white text-center">
-                          {movie.title}
-                        </h3>
-                        <p className="text-sm text-gray-400 text-center mt-1">
-                          {movie.genre?.[0]?.title ?? "No Genre"}
-                        </p>
+                        className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-900"
+                      >
+                        <div
+                          className="h-[300px] bg-cover bg-center transition-transform hover:scale-105 duration-300"
+                          style={{
+                            backgroundImage: `url(${movie.thumbnailUrl})`,
+                          }}
+                        ></div>
+                        <div className="p-4">
+                          <h3 className="text-lg font-semibold text-white text-center">
+                            {movie.title}
+                          </h3>
+                          <p className="text-sm text-gray-400 text-center mt-1">
+                            {movie.genre?.[0]?.title ?? "No Genre"}
+                          </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <div className="h-screen w-full flex items-center justify-center">
+                  <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
+                    No results found.
+                  </p>
                 </div>
+              )}
+            </div>
+            {/* series  */}
+            <div className="p-6 w-full">
+              {series?.length > 0 ? (
+                <>
+                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center pb-8">
+                    Series List
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                    {series?.map((s) => (
+                      <div
+                        key={s._id}
+                        onClick={() => {
+                          setIsOpen(true);
+                          setSelectedVideoId(s?._id);
+                        }}
+                        className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-900"
+                      >
+                        <div
+                          className="h-[300px] bg-cover bg-center transition-transform hover:scale-105 duration-300"
+                          style={{
+                            backgroundImage: `url(${s?.thumbnailUrl })`,
+                          }}
+                        ></div>
+                        <div className="p-4">
+                          <h3 className="text-lg font-semibold text-white text-center">
+                            {s?.title}
+                          </h3>
+                          <p className="text-sm text-gray-400 text-center mt-1">
+                            {s?.genre?.[0]?.title ?? "No Genre"}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
               ) : (
                 <div className="h-screen w-full flex items-center justify-center">
                   <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
