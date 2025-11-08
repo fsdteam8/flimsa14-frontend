@@ -1,7 +1,7 @@
 "use client";
 import {
   AlignJustify,
-  BellRing,
+  // BellRing,
   CircleUserRound,
   LogOut,
   Search,
@@ -122,7 +122,7 @@ const Navbar = () => {
                 onClick={handleSearchClick}
               />
             </div>
-            <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+            {/* <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" /> */}
 
             <div>
               {user ? (
@@ -201,7 +201,7 @@ const Navbar = () => {
                     onClick={handleSearchClick}
                   />
                 </div>
-                <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
+                {/* <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" /> */}
                 <div>
                   {user ? (
                     <DropdownMenu>
