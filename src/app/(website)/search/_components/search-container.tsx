@@ -144,9 +144,9 @@ const SearchContainer: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className="h-screen w-full flex items-center justify-center">
+                <div className="h-[200px] w-full flex items-center justify-center">
                   <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
-                    No results found.
+                    No Movie found.
                   </p>
                 </div>
               )}
@@ -187,9 +187,9 @@ const SearchContainer: React.FC = () => {
                   </div>
                 </>
               ) : (
-                <div className="h-screen w-full flex items-center justify-center">
+                <div className="h-[200px] w-full flex items-center justify-center">
                   <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
-                    No results found.
+                    No Series movie found.
                   </p>
                 </div>
               )}
