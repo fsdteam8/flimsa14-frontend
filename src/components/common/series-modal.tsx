@@ -56,14 +56,13 @@ const SeriesModal: React.FC<SeriesModalProps> = ({ series, isOpen, onClose }) =>
   const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(
     series.seasons[0]?.episodes?.[0] ?? null
   );
-  const [playingMode, setPlayingMode] = useState<"trailer" | "episode">(
-    series.seasons[0]?.episodes?.length ? "episode" : "trailer"
-  );
+  const [playingMode, setPlayingMode] =
+    useState<"trailer" | "episode">("trailer");
 
   useEffect(() => {
     setSelectedSeason(series.seasons[0] ?? null);
     setSelectedEpisode(series.seasons[0]?.episodes?.[0] ?? null);
-    setPlayingMode(series.seasons[0]?.episodes?.length ? "episode" : "trailer");
+    setPlayingMode("trailer");
   }, [series]);
 
   const currentVideoSrc =
