@@ -10,7 +10,13 @@ interface VideoPlayerProps {
   poster?: string;
   title?: string;
   className?: string;
-  movieId: string;
+  movieId?: string;
+  contentType?: "movie" | "episode";
+  seriesId?: string;
+  episodeId?: string;
+  seasonNumber?: number;
+  episodeNumber?: number;
+  trackHistory?: boolean;
 }
 
 const qualityLabels: Record<string | number, string> = {
@@ -30,6 +36,12 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   poster = "/placeholder.svg?height=300&width=500",
   title = "Video Player",
   movieId,
+  contentType,
+  seriesId,
+  episodeId,
+  seasonNumber,
+  episodeNumber,
+  trackHistory = true,
 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -50,6 +62,11 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     if (typeof videoUrl === "string" && videoUrl.trim()) return videoUrl.trim();
     return "";
   }, [src, videoUrl]);
+
+  const resolvedContentType = useMemo(
+    () => contentType ?? (episodeId ? "episode" : "movie"),
+    [contentType, episodeId]
+  );
 
   latestSourceRef.current = resolvedSrc;
 
@@ -143,21 +160,70 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     });
   };
 
-  const sendHistory = useCallback(() => {
-    if (!videoRef.current || !duration || !movieId || !token) return;
-    const progress = Math.round((videoRef.current.currentTime / duration) * 100);
+  const persistProgress = useCallback(() => {
+    if (!trackHistory || !videoRef.current || !duration || !token) return;
+    const currentTime = videoRef.current.currentTime;
+    const progress = Math.round((currentTime / duration) * 100);
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`,
+    };
 
-    fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/history`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ movieId, progress }),
-    }).catch(() => {
-      // Silent fail
-    });
-  }, [duration, movieId, token]);
+    const historyPayload =
+      movieId != null && movieId !== ""
+        ? { movieId, progress }
+        : seriesId
+        ? { seriesId, progress }
+        : null;
+
+    const watchtimePayload =
+      resolvedContentType === "movie" && movieId
+        ? {
+            contentType: "movie",
+            movieId,
+            watchedSeconds: Math.floor(currentTime),
+            totalDuration: Math.floor(duration),
+            lastPosition: Math.floor(currentTime),
+          }
+        : resolvedContentType === "episode" && seriesId && episodeId
+        ? {
+            contentType: "episode",
+            seriesId,
+            episodeId,
+            watchedSeconds: Math.floor(currentTime),
+            totalDuration: Math.floor(duration),
+            lastPosition: Math.floor(currentTime),
+            seasonNumber,
+            episodeNumber,
+          }
+        : null;
+
+    if (historyPayload) {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/history`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(historyPayload),
+      }).catch(() => {});
+    }
+
+    if (watchtimePayload) {
+      fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/watchtime`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify(watchtimePayload),
+      }).catch(() => {});
+    }
+  }, [
+    duration,
+    episodeId,
+    episodeNumber,
+    movieId,
+    resolvedContentType,
+    seriesId,
+    seasonNumber,
+    token,
+    trackHistory,
+  ]);
 
   const initHls = (sourceUrl = resolvedSrc) => {
     const sanitizedSrc = typeof sourceUrl === "string" ? sourceUrl.trim() : "";
@@ -337,9 +403,9 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      sendHistory();
+      persistProgress();
     };
-  }, [sendHistory]);
+  }, [persistProgress]);
 
   // Controls auto-hide (3s when playing)
   const showControls = useCallback(() => {
@@ -413,7 +479,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = setInterval(sendHistory, 5000);
+          intervalRef.current = setInterval(persistProgress, 5000);
           showControls();
         })
         .catch(() => {
@@ -428,7 +494,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         clearInterval(intervalRef.current);
         intervalRef.current = null;
       }
-      sendHistory();
+      persistProgress();
       showControls();
     }
   };
@@ -628,7 +694,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = setInterval(sendHistory, 5000);
+          intervalRef.current = setInterval(persistProgress, 5000);
           showControls();
         }}
         onPause={() => {
@@ -637,7 +703,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          sendHistory();
+          persistProgress();
           setControlsVisible(true);
         }}
         onEnded={() => {
@@ -646,7 +712,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
             clearInterval(intervalRef.current);
             intervalRef.current = null;
           }
-          sendHistory();
+          persistProgress();
           setControlsVisible(true);
         }}
         style={{ touchAction: "manipulation" }}

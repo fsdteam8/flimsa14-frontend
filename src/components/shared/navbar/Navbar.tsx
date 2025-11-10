@@ -113,125 +113,92 @@ const Navbar = () => {
             </ul>
           </nav>
         </div>
-        {/* search and profile  */}
-        <div className="hidden md:block">
-          <div className=" flex items-center gap-3">
-            <div className="relative">
-              <Search
-                className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
-                onClick={handleSearchClick}
-              />
-            </div>
-            {/* <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" /> */}
-
-            <div>
-              {user ? (
-                <DropdownMenu>
-                  <DropdownMenuTrigger>
-                    {" "}
-                    <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="bg-white mt-3">
-                    <Link href={"/my-account"}>
-                      <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
-                        My Account
-                      </DropdownMenuItem>
-                    </Link>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => signOut({ callbackUrl: "/" })}
-                      className="cursor-pointer text-red-500 text-base md:text-lg font-semibold leading-[120%]"
-                    >
-                      <LogOut /> Logout
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              ) : (
-                <>
-                  <Link href="/login">
-                    <button className="bg-white py-1 px-4 rounded-[10px] text-base md:text-lg font-semibold text-black leading-normal">
-                      Sign In
-                    </button>
-                  </Link>
-                </>
-              )}
-            </div>
-          </div>
+        {/* search and profile */}
+        <div className="hidden items-center gap-3 md:flex">
+          <Search
+            className="h-6 w-6 cursor-pointer text-white"
+            onClick={handleSearchClick}
+          />
+          {user ? (
+            <DropdownMenu>
+              <DropdownMenuTrigger>
+                <CircleUserRound className="h-7 w-7 cursor-pointer text-white" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="bg-white mt-3">
+                <Link href={"/my-account"}>
+                  <DropdownMenuItem className="cursor-pointer text-black text-base font-semibold leading-[120%]">
+                    My Account
+                  </DropdownMenuItem>
+                </Link>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={() => signOut({ callbackUrl: "/" })}
+                  className="cursor-pointer text-red-500 text-base font-semibold leading-[120%]"
+                >
+                  <LogOut /> Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          ) : (
+            <Link href="/login">
+              <button className="rounded-full bg-white px-4 py-1 text-base font-semibold text-black">
+                Sign In
+              </button>
+            </Link>
+          )}
         </div>
 
-        {/* small device  */}
-        {/* hamburger menu  */}
-        <div className="block md:hidden">
+        {/* mobile controls */}
+        <div className="flex items-center gap-3 md:hidden">
+          <Search
+            className="h-6 w-6 cursor-pointer text-white"
+            onClick={handleSearchClick}
+          />
+          <button
+            onClick={() => (user ? router.push("/my-account") : router.push("/login"))}
+            className="rounded-full border border-white/30 p-2 text-white"
+          >
+            <CircleUserRound className="h-5 w-5" />
+          </button>
           <Sheet>
             <SheetTrigger>
-              <AlignJustify className="w-10 h-10 text-[#707070]" />
+              <AlignJustify className="h-9 w-9 text-white" />
             </SheetTrigger>
-            <SheetContent className="bg-[#111111]">
-              <div className="w-full flex items-center justify-center pt-6">
+            <SheetContent className="bg-[#111111] text-white">
+              <div className="flex flex-col gap-6 pt-6">
                 <Image
                   src="/assets/images/logo.png"
                   alt="Logo"
-                  width={1143}
-                  height={400}
-                  className="w-full h-[120px] object-contain cursor-pointer"
+                  width={180}
+                  height={60}
+                  className="mx-auto h-12 w-auto"
                 />
-              </div>
-              <ul className="flex flex-col items-center gap-4 md:gap-6 lg:gap-8 pt-2">
-                {menuItemsData?.map((item) => {
-                  return (
-                    <li
-                      key={item.id}
-                      className="text-white text-lg font-medium"
-                    >
+                <ul className="flex flex-col gap-4">
+                  {menuItemsData?.map((item) => (
+                    <li key={item.id}>
                       <Link
-                        className="text-lg md:text-xl lg:text-2xl font-medium text-white leading-[120%] hover:underline hover:text-black"
+                        className="block text-lg font-medium text-white hover:text-white/70"
                         href={`${item.link}`}
                       >
-                        {" "}
                         {item.title}
                       </Link>
                     </li>
-                  );
-                })}
-              </ul>
-              <div className=" flex items-center justify-center gap-5 pt-7">
-                <div className="relative">
-                  <Search
-                    className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer"
-                    onClick={handleSearchClick}
-                  />
-                </div>
-                {/* <BellRing className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" /> */}
-                <div>
+                  ))}
+                </ul>
+                <div className="mt-4 border-t border-white/10 pt-4">
                   {user ? (
-                    <DropdownMenu>
-                      <DropdownMenuTrigger>
-                        {" "}
-                        <CircleUserRound className="w-5 md:w-6 lg:w-7 h-5 md:h-6 lg:h-7 text-white cursor-pointer" />
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent className="bg-white mt-3">
-                        <Link href={"/my-account"}>
-                          <DropdownMenuItem className="cursor-pointer text-black text-base md:text-lg font-semibold leading-[120%]">
-                            My Account
-                          </DropdownMenuItem>
-                        </Link>
-                        <DropdownMenuSeparator />
-                        <DropdownMenuItem
-                          onClick={() => signOut({ callbackUrl: "/" })}
-                          className="cursor-pointer text-red-500 text-base md:text-lg font-semibold leading-[120%]"
-                        >
-                          <LogOut /> Logout
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <button
+                      onClick={() => signOut({ callbackUrl: "/" })}
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-red-500/10 px-4 py-2 text-red-400"
+                    >
+                      <LogOut className="h-4 w-4" /> Logout
+                    </button>
                   ) : (
-                    <>
-                      <Link href="/login">
-                        <button className="bg-white py-1 px-4 rounded-[10px] text-base md:text-lg font-semibold text-black leading-normal">
-                          Sign In
-                        </button>
-                      </Link>
-                    </>
+                    <Link href="/login">
+                      <button className="w-full rounded-full bg-white px-4 py-2 text-base font-semibold text-black">
+                        Sign In
+                      </button>
+                    </Link>
                   )}
                 </div>
               </div>

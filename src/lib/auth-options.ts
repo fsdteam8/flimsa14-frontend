@@ -48,6 +48,8 @@ export const authOptions: NextAuthOptions = {
           // ✅ Adjust this based on your actual API response shape
           const { accessToken, refreshToken, user, isPaid } = response.data;
 
+          console.log("response", response.data);
+
 
           if (!accessToken || !user) {
             throw new Error("Invalid login response");
