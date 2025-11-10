@@ -463,14 +463,10 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
     <React.Fragment>
       <div
         className="fixed inset-0 z-40 bg-black/80 backdrop-blur-sm transition-opacity duration-300"
-        onClick={onClose}
         aria-hidden
       />
       <div
         className="fixed inset-0 z-50 flex justify-center p-0 sm:p-3 md:p-4"
-        onClick={(event) => {
-          if (event.target === event.currentTarget) onClose();
-        }}
         role="dialog"
         aria-modal="true"
         aria-label={`${series.title} details`}
