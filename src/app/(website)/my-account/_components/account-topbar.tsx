@@ -156,6 +156,12 @@ const AccountTopBar = () => {
               })}
 
               <div className="border-t border-[#707070] pt-4 mt-2">
+                <button
+                  onClick={() => setDeleteAccountModal(true)}
+                  className="mb-3 w-full rounded-lg border border-red-500/40 px-4 py-3 text-center text-red-400 hover:bg-red-500/10 transition"
+                >
+                  Delete account
+                </button>
                 <SheetClose asChild>
                   <button
                     onClick={() => signOut({ callbackUrl: "/" })}

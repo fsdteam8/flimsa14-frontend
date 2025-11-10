@@ -1,7 +1,10 @@
 "use client"
 import { useState } from "react"
-import type { Series } from "@/app/_components/series-movies"
+import type { Series } from "@/types/series"
 import SeriesModal from "./series-modal"
+
+const getGenreLabel = (genre?: { title?: string; name?: string }) =>
+  genre?.title || genre?.name || "Genre"
 
 const SeriesCart = ({ blog }: { blog: Series }) => {
   const [isOpen, setIsOpen] = useState(false)
@@ -23,7 +26,7 @@ const SeriesCart = ({ blog }: { blog: Series }) => {
             {blog?.title}
           </h5>
           <p className="text-base md:text-lg font-medium leading-[120%] text-white text-center pt-1">
-            {blog?.genre[0]?.title || "Genre Not Available"}
+            {getGenreLabel(blog?.genre?.[0])}
           </p>
         </div>
       </div>

@@ -12,6 +12,7 @@ export default function DemoVideo() {
           title="Episode 3 Video"
           className="mx-auto"
           movieId="1760502635240"
+          contentType="movie"
         />
       </div>
     </div>

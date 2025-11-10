@@ -2,15 +2,19 @@
 
 import ViewDetails from "@/app/_components/view-details";
 import { useSocket } from "@/components/provider/SocketProvider";
-import { ApiResponse, Movie, Series } from "@/types/search-data-type";
+import { ApiResponse, Movie } from "@/types/search-data-type";
+import type { Series } from "@/types/series";
 import { Search, X } from "lucide-react";
 import { useEffect, useState, ChangeEvent } from "react";
+import SeriesModal from "@/components/common/series-modal";
 
 const SearchContainer: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState("");
   const [debouncedTerm, setDebouncedTerm] = useState("");
-  const [isOpen, setIsOpen] = useState(false);
-  const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
+  const [movieModalOpen, setMovieModalOpen] = useState(false);
+  const [selectedMovieId, setSelectedMovieId] = useState<string | null>(null);
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null);
+  const [activeTab, setActiveTab] = useState<"movies" | "series">("movies");
   const [movies, setMovies] = useState<Movie[]>([]);
   const [series, setSeries] = useState<Series[]>([]);
 
@@ -107,102 +111,107 @@ const SearchContainer: React.FC = () => {
 
           {/* cart data  */}
           <div className="container mx-auto">
-            {/* movies  */}
+            <div className="px-4 pt-6">
+              <div className="mb-6 inline-flex rounded-full border border-white/20 bg-white/5 p-1 text-sm text-white">
+                {(["movies", "series"] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    onClick={() => setActiveTab(tab)}
+                    className={`rounded-full px-5 py-2 transition ${
+                      activeTab === tab ? "bg-white text-black" : "text-white/70"
+                    }`}
+                  >
+                    {tab === "movies" ? "Movies" : "Series"}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <div className="p-6 w-full">
-              {movies?.length > 0 ? (
-                <>
-                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center pb-6">
-                    Movies List
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+              {activeTab === "movies" ? (
+                movies?.length ? (
+                  <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                     {movies.map((movie) => (
-                      <div
+                      <button
                         key={movie._id}
                         onClick={() => {
-                          setIsOpen(true);
-                          setSelectedVideoId(movie._id);
+                          setSelectedMovieId(movie._id);
+                          setMovieModalOpen(true);
                         }}
-                        className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-900"
+                        className="overflow-hidden rounded-2xl bg-black/40 text-left shadow-lg transition hover:-translate-y-1 hover:shadow-2xl"
                       >
                         <div
-                          className="h-[300px] bg-cover bg-center transition-transform hover:scale-105 duration-300"
+                          className="h-48 w-full bg-cover bg-center"
                           style={{
                             backgroundImage: `url(${movie.thumbnailUrl})`,
                           }}
-                        ></div>
-                        <div className="p-4">
-                          <h3 className="text-lg font-semibold text-white text-center">
+                        />
+                        <div className="space-y-1 px-4 py-3">
+                          <h3 className="text-lg font-semibold text-white">
                             {movie.title}
                           </h3>
-                          <p className="text-sm text-gray-400 text-center mt-1">
-                            {movie.genre?.[0]?.title ?? "No Genre"}
+                          <p className="text-sm text-white/60">
+                            {movie.genre?.[0]?.title ||
+                              movie.genre?.[0]?.name ||
+                              "No genre"}
                           </p>
                         </div>
-                      </div>
+                      </button>
                     ))}
                   </div>
-                </>
-              ) : (
-                <div className="h-[200px] w-full flex items-center justify-center">
-                  <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
-                    No Movie found.
-                  </p>
-                </div>
-              )}
-            </div>
-            {/* series  */}
-            <div className="p-6 w-full">
-              {series?.length > 0 ? (
-                <>
-                  <h2 className="text-lg md:text-xl lg:text-2xl font-semibold text-white leading-[120%] text-center pb-8">
-                    Series List
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-                    {series?.map((s) => (
+                ) : (
+                  <div className="py-16 text-center text-white/70">
+                    No movies found.
+                  </div>
+                )
+              ) : series?.length ? (
+                <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+                  {series.map((item) => (
+                    <button
+                      key={item._id}
+                      onClick={() => setSelectedSeries(item)}
+                      className="overflow-hidden rounded-2xl bg-black/40 text-left shadow-lg transition hover:-translate-y-1 hover:shadow-2xl"
+                    >
                       <div
-                        key={s._id}
-                        onClick={() => {
-                          setIsOpen(true);
-                          setSelectedVideoId(s?._id);
+                        className="h-48 w-full bg-cover bg-center"
+                        style={{
+                          backgroundImage: `url(${item.thumbnailUrl})`,
                         }}
-                        className="relative rounded-xl overflow-hidden shadow-lg cursor-pointer bg-gray-900"
-                      >
-                        <div
-                          className="h-[300px] bg-cover bg-center transition-transform hover:scale-105 duration-300"
-                          style={{
-                            backgroundImage: `url(${s?.thumbnailUrl })`,
-                          }}
-                        ></div>
-                        <div className="p-4">
-                          <h3 className="text-lg font-semibold text-white text-center">
-                            {s?.title}
-                          </h3>
-                          <p className="text-sm text-gray-400 text-center mt-1">
-                            {s?.genre?.[0]?.title ?? "No Genre"}
-                          </p>
-                        </div>
+                      />
+                      <div className="space-y-1 px-4 py-3">
+                        <h3 className="text-lg font-semibold text-white">
+                          {item.title}
+                        </h3>
+                        <p className="text-sm text-white/60">
+                          {item.genre?.[0]?.title ||
+                            item.genre?.[0]?.name ||
+                            "No genre"}
+                        </p>
                       </div>
-                    ))}
-                  </div>
-                </>
+                    </button>
+                  ))}
+                </div>
               ) : (
-                <div className="h-[200px] w-full flex items-center justify-center">
-                  <p className="text-white text-2xl md:text-3xl lg:text-4xl text-center">
-                    No Series movie found.
-                  </p>
+                <div className="py-16 text-center text-white/70">
+                  No series found.
                 </div>
               )}
             </div>
 
-            {/* modal open  */}
-            {isOpen && (
-              <div>
-                <ViewDetails
-                  open={isOpen}
-                  onOpenChange={() => setIsOpen(false)}
-                  videoId={selectedVideoId}
-                />
-              </div>
+            {movieModalOpen && (
+              <ViewDetails
+                open={movieModalOpen}
+                onOpenChange={() => setMovieModalOpen(false)}
+                videoId={selectedMovieId}
+              />
+            )}
+
+            {selectedSeries && (
+              <SeriesModal
+                series={selectedSeries}
+                isOpen={Boolean(selectedSeries)}
+                onClose={() => setSelectedSeries(null)}
+              />
             )}
           </div>
         </div>

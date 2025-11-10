@@ -2,7 +2,7 @@
 import React, { Suspense } from "react";
 import { useSuspenseQuery } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import VideoPlayer from "@/components/ui/video-player";
+import VideoPlayer from "@/components/video/VideoPlayer";
 
 export interface WishlistEntryResponse {
   success: boolean;
@@ -119,7 +119,8 @@ const ViewDetails = ({ wishListId }: { wishListId?: string | null }) => {
             poster={data?.data?.movieId?.thumbnailUrl || ""}
             title={data?.data?.movieId?.title || "Movie Video"}
             className=" mx-auto"
-            movieId={data?.data?._id || ""}
+            movieId={data?.data?.movieId?._id || ""}
+            contentType="movie"
           />
         </Suspense>
       </div>

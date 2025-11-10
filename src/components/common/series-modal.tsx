@@ -1,386 +1,477 @@
-"use client"
+﻿"use client";
 
-import { useState, useEffect, useMemo, useRef } from "react"
-import { createPortal } from "react-dom"
-import { X, ChevronDown, Play } from "lucide-react"
-import Image from "next/image"
-import VideoPlayer from "../video/VideoPlayer"
-import type { Series, Season, Episode } from "@/app/_components/series-movies"
+import React, { useEffect, useMemo, useState } from "react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import VideoPlayer from "@/components/video/VideoPlayer";
+import type { Series, Season, Episode } from "@/types/series";
+import { Button } from "@/components/ui/button";
+import { Bookmark, Heart, Play } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
+import moment from "moment";
+import { toast } from "react-toastify";
 
 interface SeriesModalProps {
-  series: Series
-  isOpen: boolean
-  onClose: () => void
+  series: Series;
+  isOpen: boolean;
+  onClose: () => void;
 }
 
-/** Normalize names from string | string[] | {name/title/...}[] */
-function normalizeNames(value: any): string[] {
-  if (!value) return []
-  if (Array.isArray(value)) {
-    return value
-      .map((v) => (typeof v === "string" ? v : v?.name ?? v?.title ?? v?.fullName ?? v?.displayName ?? ""))
-      .filter(Boolean)
-  }
-  if (typeof value === "string") return [value]
-  if (typeof value === "object") {
-    const maybe = value?.name ?? value?.title ?? value?.fullName ?? value?.displayName
-    return maybe ? [maybe] : []
-  }
-  return []
+interface WishlistStatusResponse {
+  success: boolean;
+  data: {
+    inWishlist: boolean;
+    wishlistId: string | null;
+  };
 }
 
-export default function SeriesModal({ series, isOpen, onClose }: SeriesModalProps) {
-  const [selectedSeason, setSelectedSeason] = useState<Season | null>(null)
-  const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(null)
-  const [playingMode, setPlayingMode] = useState<"trailer" | "episode">("trailer")
-  const [showEpisodes, setShowEpisodes] = useState(true)
-  const [mounted, setMounted] = useState(false)
+interface LikeStatusResponse {
+  success: boolean;
+  data: {
+    liked: boolean;
+    totalLikes: number;
+  };
+}
 
-  // expands when user clicks the truncated description
-  const [detailsOpen, setDetailsOpen] = useState(false)
+interface LikesListResponse {
+  success: boolean;
+  data: Array<{
+    _id: string;
+    targetType: string;
+    series?: { _id: string } | null;
+    episodeId?: string;
+  }>;
+}
 
-  const heroRef = useRef<HTMLDivElement>(null)
-  const scrollContainerRef = useRef<HTMLDivElement>(null)
+const getGenreTitle = (genre?: { title?: string; name?: string }) =>
+  genre?.title || genre?.name || "Genre";
 
-  const directors = useMemo(
-    () =>
-      normalizeNames(
-        (series as any).directors ?? (series as any).director ?? (series as any).creators ?? (series as any).creator
-      ),
-    [series]
-  )
-  const cast = useMemo(
-    () => normalizeNames((series as any).cast ?? (series as any).actors ?? (series as any).stars),
-    [series]
-  )
+const SeriesModal: React.FC<SeriesModalProps> = ({ series, isOpen, onClose }) => {
+  const { data: session } = useSession();
+  const token = (session?.user as { accessToken?: string })?.accessToken;
+  const [selectedSeason, setSelectedSeason] = useState<Season | null>(
+    series.seasons[0] ?? null
+  );
+  const [selectedEpisode, setSelectedEpisode] = useState<Episode | null>(
+    series.seasons[0]?.episodes?.[0] ?? null
+  );
+  const [playingMode, setPlayingMode] = useState<"trailer" | "episode">(
+    series.seasons[0]?.episodes?.length ? "episode" : "trailer"
+  );
 
-  // Initialize first season/episode
   useEffect(() => {
-    if (series.seasons.length > 0 && !selectedSeason) {
-      const firstSeason = series.seasons[0]
-      setSelectedSeason(firstSeason)
-      if (firstSeason.episodes.length > 0) {
-        setSelectedEpisode(firstSeason.episodes[0])
-      }
-    }
-  }, [series, selectedSeason])
+    setSelectedSeason(series.seasons[0] ?? null);
+    setSelectedEpisode(series.seasons[0]?.episodes?.[0] ?? null);
+    setPlayingMode(series.seasons[0]?.episodes?.length ? "episode" : "trailer");
+  }, [series]);
 
-  useEffect(() => setMounted(true), [])
-
-  // Lock page behind modal so only the modal scrolls
-  useEffect(() => {
-    if (!isOpen) return
-
-    const bodyStyle = document.body.style
-    const rootStyle = document.documentElement.style
-    const previous = {
-      bodyOverflow: bodyStyle.overflow,
-      htmlOverflow: rootStyle.overflow,
-      bodyPaddingRight: bodyStyle.paddingRight,
-    }
-    const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth
-
-    bodyStyle.overflow = "hidden"
-    rootStyle.overflow = "hidden"
-    if (scrollbarWidth > 0) {
-      bodyStyle.paddingRight = `${scrollbarWidth}px`
-    }
-
-    return () => {
-      bodyStyle.overflow = previous.bodyOverflow
-      rootStyle.overflow = previous.htmlOverflow
-      bodyStyle.paddingRight = previous.bodyPaddingRight
-    }
-  }, [isOpen])
-
-  // Reset modal scroll when opened
-  useEffect(() => {
-    if (isOpen && scrollContainerRef.current) {
-      scrollContainerRef.current.scrollTop = 0
-    }
-  }, [isOpen])
-
-  if (!isOpen || !mounted) return null
-
-  const currentVideoUrl =
-    playingMode === "episode" && selectedEpisode
+  const currentVideoSrc =
+    playingMode === "episode" && selectedEpisode?.videoUrl
       ? selectedEpisode.videoUrl
-      : selectedSeason?.trailerUrl || series.trailerUrl
+      : selectedSeason?.trailerUrl || series.trailerUrl || "";
 
-  const focusPlayer = () => {
-    heroRef.current?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
+  const currentPoster =
+    playingMode === "episode"
+      ? selectedEpisode?.thumbnailUrl || series.thumbnailUrl
+      : series.thumbnailUrl;
 
-  const handleSeasonChange = (season: Season) => {
-    setSelectedSeason(season)
-    if (season.episodes.length > 0) setSelectedEpisode(season.episodes[0])
-    setPlayingMode("trailer")
-    focusPlayer()
-  }
+  const {
+    data: wishlistStatus,
+    refetch: refetchWishlistStatus,
+    isFetching: wishlistFetching,
+  } = useQuery<WishlistStatusResponse>({
+    queryKey: ["series-wishlist-status", series._id],
+    queryFn: async () => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/wishlist/status?seriesId=${series._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.json();
+    },
+    enabled: Boolean(isOpen && token),
+  });
 
-  const handleEpisodeClick = (episode: Episode) => {
-    setSelectedEpisode(episode)
-    setPlayingMode("episode")
-    focusPlayer()
-  }
+  const {
+    data: seriesLikeStatus,
+    refetch: refetchSeriesLikeStatus,
+    isFetching: seriesLikeFetching,
+  } = useQuery<LikeStatusResponse>({
+    queryKey: ["series-like-status", series._id],
+    queryFn: async () => {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/likes/status?targetType=series&seriesId=${series._id}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+      return res.json();
+    },
+    enabled: Boolean(isOpen && token),
+  });
 
-  const toggleEpisodes = () => {
-    setShowEpisodes((prev) => !prev)
-    requestAnimationFrame(focusPlayer)
-  }
+  const {
+    data: likesList,
+    refetch: refetchLikesList,
+  } = useQuery<LikesListResponse>({
+    queryKey: ["user-likes"],
+    queryFn: async () => {
+      const res = await fetch(`${process.env.NEXT_PUBLIC_BACKEND_API}/likes`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      return res.json();
+    },
+    enabled: Boolean(isOpen && token),
+  });
 
-  // keyboard accessibility for the clickable description
-  const onDescKey = (e: React.KeyboardEvent<HTMLDivElement>) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault()
-      setDetailsOpen((p) => !p)
+  const likedEpisodeSet = useMemo(() => {
+    if (!likesList?.data) return new Set<string>();
+    return new Set(
+      likesList.data
+        .filter(
+          (like) =>
+            like.targetType === "episode" && like.series?._id === series._id
+        )
+        .map((like) => like.episodeId || "")
+        .filter(Boolean)
+    );
+  }, [likesList, series._id]);
+
+  const wishlistMutation = useMutation({
+    mutationKey: ["series-wishlist-toggle", series._id],
+    mutationFn: async () => {
+      if (!token) throw new Error("You must be signed in.");
+      const inWishlist = wishlistStatus?.data?.inWishlist;
+      const endpoint = inWishlist ? "/wishlist/item" : "/wishlist";
+      const method = inWishlist ? "DELETE" : "POST";
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}${endpoint}`,
+        {
+          method,
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ seriesId: series._id }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || "Failed to update wishlist");
+      }
+      return json;
+    },
+    onSuccess: () => {
+      refetchWishlistStatus();
+      toast.success(
+        wishlistStatus?.data?.inWishlist
+          ? "Removed from wishlist"
+          : "Added to wishlist"
+      );
+    },
+    onError: (err: unknown) => {
+      toast.error(
+        err instanceof Error ? err.message : "Unable to update wishlist"
+      );
+    },
+  });
+
+  const likeSeriesMutation = useMutation({
+    mutationKey: ["series-like-toggle", series._id],
+    mutationFn: async () => {
+      if (!token) throw new Error("You must be signed in.");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/likes/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            targetType: "series",
+            seriesId: series._id,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || "Unable to like series");
+      }
+      return json;
+    },
+    onSuccess: () => {
+      refetchSeriesLikeStatus();
+      refetchLikesList();
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Unable to like series");
+    },
+  });
+
+  const episodeLikeMutation = useMutation({
+    mutationFn: async (episode: Episode) => {
+      if (!token) throw new Error("You must be signed in.");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_BACKEND_API}/likes/toggle`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            targetType: "episode",
+            seriesId: series._id,
+            episodeId: episode._id,
+          }),
+        }
+      );
+      const json = await res.json();
+      if (!res.ok || !json?.success) {
+        throw new Error(json?.message || "Unable to like episode");
+      }
+      return json;
+    },
+    onSuccess: () => {
+      refetchLikesList();
+    },
+    onError: (err: unknown) => {
+      toast.error(err instanceof Error ? err.message : "Unable to like episode");
+    },
+  });
+
+  const handleWishlistToggle = () => {
+    if (!token) {
+      toast.info("Sign in to manage your wishlist");
+      return;
     }
-  }
+    wishlistMutation.mutate();
+  };
 
-  return createPortal(
-    <>
-      {/* Backdrop */}
-      <div
-        className="fixed inset-0 bg-black/80 backdrop-blur-sm z-40 transition-opacity duration-300"
-        onClick={onClose}
-      />
+  const handleSeriesLikeToggle = () => {
+    if (!token) {
+      toast.info("Sign in to like this series");
+      return;
+    }
+    likeSeriesMutation.mutate();
+  };
 
-      {/* Modal container (single scroll area) */}
-      <div
-        className="fixed inset-0 z-50 flex justify-center p-0 sm:p-3 md:p-4"
-        onClick={(e) => {
-          if (e.target === e.currentTarget) onClose()
-        }}
-      >
-        <div
-          ref={scrollContainerRef}
-          className="relative h-screen w-screen sm:w-full max-w-5xl bg-neutral-900 rounded-none sm:rounded-xl overflow-y-auto my-0 sm:my-4 modern-scrollbar"
-        >
-          {/* Close */}
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 z-50 p-2 rounded-full bg-black/60 text-white hover:bg-black/80 transition md:top-6 md:right-6"
-            aria-label="Close modal"
-          >
-            <X className="w-5 h-5 md:w-6 md:h-6" />
-          </button>
+  const handleEpisodeLike = (episode: Episode) => {
+    if (!token) {
+      toast.info("Sign in to like this episode");
+      return;
+    }
+    episodeLikeMutation.mutate(episode);
+  };
 
-          {/* Hero: sticky on small screens only */}
-          {currentVideoUrl && (
-            <div ref={heroRef} className="sticky lg:static top-0 z-30">
-              <VideoPlayer
-                videoUrl={currentVideoUrl}
-                poster={series.thumbnailUrl || "/placeholder.svg?height=400&width=800"}
-                title={series.title}
-                movieId={series._id}
-                className="w-full"
-              />
-            </div>
-          )}
+  return (
+    <Dialog
+      open={isOpen}
+      onOpenChange={(value) => {
+        if (!value) onClose();
+      }}
+    >
+      <DialogContent className="w-full max-w-6xl border-0 bg-neutral-950/95 p-0 text-white">
+        <ScrollArea className="max-h-[90vh] space-y-4">
+          <div className="p-4 pb-0">
+            <VideoPlayer
+              src={currentVideoSrc}
+              poster={currentPoster || "/assets/images/no-img-available.jpg"}
+              title={
+                playingMode === "episode"
+                  ? `${series.title} - Episode ${selectedEpisode?.episodeNumber ?? ""}`
+                  : `${series.title} - Trailer`
+              }
+              className="w-full"
+              seriesId={series._id}
+              episodeId={playingMode === "episode" ? selectedEpisode?._id : undefined}
+              seasonNumber={selectedSeason?.seasonNumber}
+              episodeNumber={selectedEpisode?.episodeNumber}
+              contentType={playingMode === "episode" ? "episode" : "movie"}
+              trackHistory={playingMode === "episode"}
+              videoUrl={currentVideoSrc}
+            />
+          </div>
 
-          {/* Content */}
-          <div className="p-4 md:p-6 lg:p-8 space-y-6">
-            {/* Title & clickable description */}
-            <div className="space-y-3">
-              <h2 className="text-2xl md:text-3xl lg:text-4xl font-bold text-white">{series.title}</h2>
-
-              {/* Click the text itself to expand */}
-              <div
-                role="button"
-                tabIndex={0}
-                aria-expanded={detailsOpen}
-                onClick={() => setDetailsOpen((p) => !p)}
-                onKeyDown={onDescKey}
-                className="group text-sm md:text-base text-neutral-300 cursor-pointer select-text"
-              >
-                <p
-                  className={`transition-all ${
-                    detailsOpen ? "" : "line-clamp-2 md:line-clamp-3"
-                  }`}
-                >
-                  {series.description}
+          <div className="space-y-4 px-4 pb-6">
+            <div className="flex flex-col gap-4 border-b border-white/10 pb-4 md:flex-row md:items-center md:justify-between">
+              <div>
+                <h2 className="text-2xl font-semibold md:text-3xl">{series.title}</h2>
+                <p className="text-sm text-white/70">
+                  {series.status ? series.status.toUpperCase() : ""} -
+                  {series.genre.map((genre) => getGenreTitle(genre)).join(", ")}
                 </p>
-
-                {/* subtle hint when collapsed */}
-                {!detailsOpen && (
-                  <span className="mt-1 inline-flex items-center gap-1 text-neutral-400 text-xs">
-                    Show more
-                    <ChevronDown className="h-4 w-4 transition-transform group-hover:translate-y-0.5" />
-                  </span>
-                )}
-
-                {/* Expanded credits under the full text */}
-                {detailsOpen && (
-                  <div className="mt-3 space-y-3">
-                    {directors.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-neutral-400 text-xs md:text-sm uppercase tracking-wide">Director</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {directors.map((name, idx) => (
-                            <span
-                              key={`${name}-${idx}`}
-                              className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs md:text-sm text-neutral-200"
-                            >
-                              {name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-
-                    {cast.length > 0 && (
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="text-neutral-400 text-xs md:text-sm uppercase tracking-wide">Cast</span>
-                        <div className="flex flex-wrap gap-1.5">
-                          {cast.map((name, idx) => (
-                            <span
-                              key={`${name}-${idx}`}
-                              className="rounded-full bg-neutral-800 px-2.5 py-1 text-xs md:text-sm text-neutral-200"
-                            >
-                              {name}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                  </div>
-                )}
               </div>
-
-              {/* Genres */}
-              {series.genre.length > 0 && (
-                <div className="flex flex-wrap gap-2">
-                  {series.genre.map((gen) => (
-                    <span
-                      key={gen._id}
-                      className="px-3 py-1 bg-neutral-800 hover:bg-neutral-700 text-neutral-300 text-xs md:text-sm rounded-full transition-colors"
-                    >
-                      {gen.title}
+              <div className="flex flex-wrap gap-3">
+                <Button
+                  variant={
+                    wishlistStatus?.data?.inWishlist ? "secondary" : "outline"
+                  }
+                  size="sm"
+                  disabled={!token || wishlistMutation.isPending || wishlistFetching}
+                  onClick={handleWishlistToggle}
+                >
+                  <Bookmark
+                    className="h-4 w-4"
+                    fill={
+                      wishlistStatus?.data?.inWishlist ? "#ffffff" : "transparent"
+                    }
+                  />
+                  {wishlistStatus?.data?.inWishlist
+                    ? "In wishlist"
+                    : "Add to wishlist"}
+                </Button>
+                <Button
+                  variant={seriesLikeStatus?.data?.liked ? "secondary" : "outline"}
+                  size="sm"
+                  disabled={!token || likeSeriesMutation.isPending || seriesLikeFetching}
+                  onClick={handleSeriesLikeToggle}
+                >
+                  <Heart
+                    className="h-4 w-4"
+                    fill={seriesLikeStatus?.data?.liked ? "#ef4444" : "transparent"}
+                  />
+                  {seriesLikeStatus?.data?.liked ? "Liked" : "Like series"}
+                  {typeof seriesLikeStatus?.data?.totalLikes === "number" && (
+                    <span className="text-xs text-white/70">
+                      {seriesLikeStatus.data.totalLikes}
                     </span>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* Season selector */}
-            <div className="space-y-3 md:space-y-4">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
-                <h3 className="text-lg md:text-xl font-bold text-white">Episodes</h3>
-
-                {series.seasons.length > 0 && (
-                  <div className="relative inline-flex w-full md:w-auto">
-                    <select
-                      value={selectedSeason?._id || ""}
-                      onChange={(e) => {
-                        const season = series.seasons.find((s) => s._id === e.target.value)
-                        if (season) handleSeasonChange(season)
-                      }}
-                      className="w-full md:w-auto appearance-none bg-neutral-800 text-white px-4 py-2 md:py-2.5 rounded-lg border border-neutral-700 hover:border-neutral-600 transition cursor-pointer pr-10 text-sm md:text-base"
-                    >
-                      {series.seasons.map((season) => (
-                        <option key={season._id} value={season._id}>
-                          Season {season.seasonNumber}
-                          {season.name && ` - ${season.name}`}
-                        </option>
-                      ))}
-                    </select>
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-neutral-400 pointer-events-none" />
-                  </div>
-                )}
+                  )}
+                </Button>
               </div>
-
-              {/* Toggle episodes on mobile */}
-              <button
-                onClick={toggleEpisodes}
-                className="md:hidden w-full py-2 px-4 bg-neutral-800 hover:bg-neutral-700 text-white text-sm rounded-lg transition-colors"
-              >
-                {showEpisodes ? "Hide Episodes" : "Show Episodes"}
-              </button>
             </div>
 
-            {/* Episodes (no inner scroll) */}
-            {showEpisodes && (
-              <div className="space-y-2 md:space-y-3">
-                {selectedSeason?.episodes?.length ? (
-                  <div className="grid gap-2 md:gap-3">
-                    {selectedSeason.episodes.map((episode, index) => (
-                      <button
-                        key={episode._id || index}
-                        onClick={() => handleEpisodeClick(episode)}
-                        className={`group w-full flex gap-3 p-3 md:p-4 rounded-lg transition-all ${
-                          selectedEpisode?._id === episode._id
-                            ? "bg-neutral-800 ring-1 ring-neutral-600 shadow-md"
-                            : "bg-neutral-900 hover:bg-neutral-800"
+            <p className="text-sm text-white/80 md:text-base">
+              {series.description}
+            </p>
+
+            <div className="grid gap-4 rounded-lg border border-white/10 p-4 text-sm text-white/80 md:grid-cols-2">
+              <div className="space-y-2">
+                <p>
+                  <span className="text-white">Cast:</span> {" "}
+                  {series.cast?.length ? series.cast.join(", ") : "N/A"}
+                </p>
+                <p>
+                  <span className="text-white">Directors:</span> {" "}
+                  {series.directors?.length ? series.directors.join(", ") : "N/A"}
+                </p>
+              </div>
+              <div className="space-y-2">
+                <p>
+                  <span className="text-white">Seasons:</span> {series.seasons.length || 0}
+                </p>
+                <p>
+                  <span className="text-white">Updated:</span> {" "}
+                  {series.updatedAt
+                    ? moment(series.updatedAt).format("MMM DD, YYYY")
+                    : "N/A"}
+                </p>
+              </div>
+            </div>
+
+            {series.seasons.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                  <h3 className="text-lg font-semibold">Episodes</h3>
+                  <select
+                    className="w-full rounded-md border border-white/20 bg-transparent px-3 py-2 text-sm md:w-60"
+                    value={selectedSeason?._id || ""}
+                    onChange={(event) => {
+                      const season = series.seasons.find(
+                        (item) => item._id === event.target.value
+                      );
+                      if (season) {
+                        setSelectedSeason(season);
+                        setSelectedEpisode(season.episodes[0] ?? null);
+                        setPlayingMode(season.episodes.length ? "episode" : "trailer");
+                      }
+                    }}
+                  >
+                    {series.seasons.map((season) => (
+                      <option key={season._id} value={season._id}>
+                        {`Season ${season.seasonNumber}${
+                          season.name ? ` - ${season.name}` : ""
                         }`}
-                      >
-                        {/* Thumb (object-contain to avoid cropping) */}
-                        <div className="relative w-24 md:w-28 flex-shrink-0 aspect-video bg-neutral-700 rounded overflow-hidden">
-                          <Image
-                            src={episode.thumbnailUrl || "/placeholder.svg?height=150&width=250"}
-                            alt={`Episode ${episode.episodeNumber}`}
-                            fill
-                            className="object-cover"
-                            sizes="(max-width: 768px) 96px, 112px"
-                          />
-                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/20 transition-colors">
-                            <div className="flex items-center justify-center w-8 h-8 rounded-full bg-white/25 group-hover:bg-white/40 transition-colors">
-                              <Play className="w-4 h-4 text-white fill-white ml-0.5" />
-                            </div>
-                          </div>
-                        </div>
-
-                        {/* Info */}
-                        <div className="flex-1 text-left min-w-0 py-1">
-                          <div className="flex items-start justify-between gap-2 mb-1.5">
-                            <span className="text-white font-semibold text-sm md:text-base line-clamp-2">
-                              Ep {episode.episodeNumber}: {episode.title}
-                            </span>
-                            {episode.duration > 0 && (
-                              <span className="text-neutral-400 text-xs md:text-sm flex-shrink-0 whitespace-nowrap">
-                                {Math.floor(episode.duration / 60)}m
-                              </span>
-                            )}
-                          </div>
-
-                          <p className="text-neutral-300 text-xs md:text-sm line-clamp-2 mb-1.5">
-                            {episode.description}
-                          </p>
-
-                          {episode.releaseDate && (
-                            <p className="text-neutral-500 text-xs">
-                              {new Date(episode.releaseDate).toLocaleDateString("en-US", {
-                                year: "numeric",
-                                month: "short",
-                                day: "numeric",
-                              })}
-                            </p>
-                          )}
-                        </div>
-                      </button>
+                      </option>
                     ))}
-                  </div>
-                ) : (
-                  <div className="text-center py-8 text-neutral-400">
-                    <p>No episodes available for this season</p>
-                  </div>
-                )}
+                  </select>
+                </div>
+
+                <div className="space-y-2">
+                  {selectedSeason?.episodes?.length ? (
+                    selectedSeason.episodes.map((episode) => {
+                      const isActive = selectedEpisode?._id === episode._id;
+                      const liked = likedEpisodeSet.has(episode._id);
+                      return (
+                        <div
+                          key={episode._id}
+                          className={`flex items-start gap-3 rounded-lg border border-white/10 p-3 transition ${
+                            isActive ? "bg-white/5" : "bg-transparent"
+                          }`}
+                        >
+                          <button
+                            className="flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-full bg-white/10 text-white"
+                            onClick={() => {
+                              setSelectedEpisode(episode);
+                              setPlayingMode("episode");
+                            }}
+                          >
+                            <Play className="h-4 w-4" />
+                          </button>
+                          <div className="flex flex-1 flex-col gap-1 text-left">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="text-sm font-medium capitalize md:text-base">
+                                Episode {episode.episodeNumber}: {episode.title}
+                              </p>
+                              <button
+                                className={`inline-flex items-center gap-1 text-xs ${
+                                  liked ? "text-red-400" : "text-white/60"
+                                }`}
+                                onClick={() => handleEpisodeLike(episode)}
+                                disabled={episodeLikeMutation.isPending}
+                              >
+                                <Heart
+                                  className="h-3.5 w-3.5"
+                                  fill={liked ? "#ef4444" : "transparent"}
+                                />
+                                Like
+                              </button>
+                            </div>
+                            <p className="text-xs text-white/70 md:text-sm">
+                              {episode.description}
+                            </p>
+                            <p className="text-xs text-white/50">
+                              {episode.duration ? `${episode.duration} min - ` : ""}
+                              {episode.releaseDate
+                                ? moment(episode.releaseDate).format("MMM DD, YYYY")
+                                : ""}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    <div className="rounded-lg border border-dashed border-white/20 p-6 text-center text-white/70">
+                      Episodes for this season are coming soon.
+                    </div>
+                  )}
+                </div>
               </div>
             )}
-
-            {/* Playback mode indicator */}
-            {/* <div className="pt-2 border-t border-neutral-800 text-xs md:text-sm text-neutral-400">
-              {playingMode === "trailer" ? (
-                <span>🎬 Now playing: Season {selectedSeason?.seasonNumber} Trailer</span>
-              ) : (
-                <span>
-                  ▶ Now playing: Episode {selectedEpisode?.episodeNumber} - {selectedEpisode?.title}
-                </span>
-              )}
-            </div> */}
           </div>
-        </div>
-      </div>
-    </>,
-    document.body
-  )
-}
+        </ScrollArea>
+      </DialogContent>
+    </Dialog>
+  );
+};
+
+export default SeriesModal;

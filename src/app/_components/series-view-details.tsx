@@ -1,6 +1,5 @@
 import React from "react";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
-import { DialogDescription } from "@radix-ui/react-dialog";
 import { useQuery } from "@tanstack/react-query";
 import VideoPlayer from "@/components/video/VideoPlayer";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -77,7 +76,12 @@ const SeriesViewDetails = ({
 
   return (
     <div>
-      <Dialog open={open} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open}
+        onOpenChange={(value) => {
+          if (!value) onOpenChange();
+        }}
+      >
         <DialogContent className="bg-white p-2">
           <div className="p-2">
             <VideoPlayer
@@ -85,12 +89,14 @@ const SeriesViewDetails = ({
               poster={data?.data?.thumbnailUrl || ""}
               title={data?.data?.title || "Movie Video"}
               className="mx-auto"
-              movieId={videoId || ""}
+              seriesId={data?.data?._id || ""}
+              contentType="movie"
+              trackHistory={false}
             />
           </div>
 
           <ScrollArea className="h-[210px] rounded-md border p-2">
-            <DialogDescription className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-4">
+            <div className="grid grid-cols-1 gap-6 pb-4 md:grid-cols-2">
               <div className="md:col-span-1">
                 <h3 className="text-xl md:text-2xl lg:text-3xl font-bold leading-[120%] text-black">
                   {data?.data?.title || ""}
@@ -99,19 +105,7 @@ const SeriesViewDetails = ({
                   {data?.data?.description || ""}
                 </p>
               </div>
-              {/* <div className="md:col-span-1">
-                <h4 className="text-xl md:text-2xl lg:text-3xl font-semibold leading-[120%] text-black">
-                  <strong>Director Name :</strong>{" "}
-                  {data?.data?.directors.join(", ") || ""}
-                </h4>
-                <p className="text-base md:text-lg font-normal leading-[120%] text-black py-2">
-                  <strong>Duration :</strong> {data?.data?.duration || ""}
-                </p>
-                <p className="text-base md:text-lg font-normal leading-[120%] text-black">
-                  <strong>Language :</strong> {data?.data?.language || ""}
-                </p>
-              </div> */}
-            </DialogDescription>
+            </div>
           </ScrollArea>
         </DialogContent>
       </Dialog>

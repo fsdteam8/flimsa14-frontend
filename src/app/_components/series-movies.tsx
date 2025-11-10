@@ -3,8 +3,8 @@
 import React, { useMemo, useRef, useCallback } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
-import { useSession } from "next-auth/react"
 import { ChevronLeft, ChevronRight } from "lucide-react"
+import type { Series } from "@/types/series"
 
 // Swiper core + modules
 import "swiper/css"
@@ -43,71 +43,22 @@ const breakpoints = {
   },
 }
 
-export interface Genre {
-  _id: string
-  user: string
-  title: string
-  thumbnail: string
-  createdAt: string
-  updatedAt: string
-  __v: number
-}
-
-export interface Episode {
-  _id: string
-  title: string
-  description: string
-  episodeNumber: number
-  videoUrl: string
-  duration: number
-  thumbnailUrl: string | null
-  releaseDate: string // ISO date string
-}
-
-export interface Season {
-  _id: string
-  seasonNumber: number
-  name: string
-  trailerUrl: string
-  thumbnailUrl: string | null
-  episodes: Episode[]
-}
-
-export interface Series {
-  _id: string
-  title: string
-  description: string
-  genre: Genre[]
-  cast: string[]
-  trailerUrl: string
-  thumbnailUrl: string | null
-  status: string
-  seasons: Season[]
-  createdAt: string
-  updatedAt: string
-  __v: number
-}
-
-export interface Pagination {
+interface Pagination {
   total: number
   page: number
   pages: number
 }
 
-export interface SeriesData {
-  series: Series[]
-  pagination: Pagination
-}
-
-export interface SeriesResponse {
+interface SeriesResponse {
   success: boolean
   message: string
-  data: SeriesData
+  data: {
+    series: Series[]
+    pagination: Pagination
+  }
 }
 
 const SeriesMovies = () => {
-  const session = useSession()
-  // Avoid re-renders on window focus which can stutter the slider
   const {
     data: series = [],
     isLoading,

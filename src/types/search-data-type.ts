@@ -1,15 +1,10 @@
 
-
-
-
-
-
-
-
+import type { Series as SeriesType } from "@/types/series";
 
 interface Genre {
   _id: string;
   title: string;
+  name?: string;
   thumbnail: string;
   user: string;
   createdAt: string;
@@ -37,13 +32,7 @@ export interface Movie {
   __v: number;
 }
 
-export interface Series {
-  _id: string;
-  title: string;
-  genre: Genre[];
-  // other properties...
-  thumbnailUrl: string;
-}
+export type Series = SeriesType;
 
 export interface ApiResponse {
   success: boolean;
