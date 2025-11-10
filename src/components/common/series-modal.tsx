@@ -384,6 +384,14 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
     episodeLikeMutation.mutate(episode);
   };
 
+  // Normalize genres to strings for safe rendering. Always run before early returns
+  const normalizedGenres: string[] = useMemo(() => {
+    const raw = (series as unknown as { genre?: unknown }).genre;
+    const names = normalizeNames(raw);
+    if (names.length) return names;
+    return [];
+  }, [series]);
+
   if (!isOpen || !mounted) return null;
 
   const currentVideoUrl =
@@ -450,16 +458,6 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
       day: "numeric",
     });
   };
-
-  // Normalize genres to strings for safe rendering
-  const normalizedGenres: string[] = useMemo(() => {
-    const raw = (series as unknown as { genre?: unknown }).genre;
-    const names = normalizeNames(raw);
-    if (names.length) return names;
-    // If array of objects with title/name, normalizeNames already handled.
-    // If array of primitives that aren't strings, fallback to empty.
-    return [];
-  }, [series]);
 
   return createPortal(
     <React.Fragment>
@@ -595,7 +593,7 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
               )}
             </div>
 
-            <div className="flex flex-wrap gap-3 border-y border-neutral-800 py-4">
+            {/* <div className="flex flex-wrap gap-3 border-y border-neutral-800 py-4">
               <Button
                 variant={wishlistStatus?.data?.inWishlist ? "secondary" : "outline"}
                 size="sm"
@@ -639,7 +637,7 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
                   </span>
                 )}
               </Button>
-            </div>
+            </div> */}
 
             <div className="space-y-3 md:space-y-4">
               <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
@@ -752,7 +750,7 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
                               : "Like episode"
                           }
                         >
-                          <Heart
+                          {/* <Heart
                             className="h-4 w-4"
                             fill={
                               episode._id && likedEpisodeSet.has(episode._id) ? "#ef4444" : "none"
@@ -762,7 +760,7 @@ const SeriesModal = ({ series, isOpen, onClose }: SeriesModalProps) => {
                                 ? "#ef4444"
                                 : "currentColor"
                             }
-                          />
+                          /> */}
                         </button>
                       </div>
                     ))}
