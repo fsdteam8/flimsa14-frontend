@@ -1,6 +1,6 @@
 "use client"
 
-import React, { useMemo, useRef, useCallback } from "react"
+import React, { useMemo, useRef, useCallback, useState, useEffect } from "react"
 import Link from "next/link"
 import { useQuery } from "@tanstack/react-query"
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -23,6 +23,7 @@ import {
 } from "swiper/modules"
 
 import SeriesCart from "@/components/common/series-cart"
+import SeriesModal from "@/components/common/series-modal"
 
 const breakpoints = {
   0: {
@@ -89,6 +90,21 @@ const SeriesMovies = () => {
 
   const goPrev = useCallback(() => swiperRef.current?.slidePrev(), [])
   const goNext = useCallback(() => swiperRef.current?.slideNext(), [])
+
+  const [selectedSeries, setSelectedSeries] = useState<Series | null>(null)
+
+  useEffect(() => {
+    const swiper = swiperRef.current
+    if (!swiper || !swiper.autoplay) return
+    if (selectedSeries) {
+      swiper.autoplay.stop()
+      return () => {
+        swiper.autoplay.start()
+      }
+    }
+    swiper.autoplay.start()
+    return undefined
+  }, [selectedSeries])
 
   if (isLoading) {
     return (
@@ -185,11 +201,19 @@ const SeriesMovies = () => {
               virtualIndex={index}
               className="!h-auto py-4 will-change-transform"
             >
-              <SeriesCart blog={s.value} />
+              <SeriesCart blog={s.value} onSelect={setSelectedSeries} />
             </SwiperSlide>
           ))}
         </Swiper>
       </div>
+
+      {selectedSeries && (
+        <SeriesModal
+          series={selectedSeries}
+          isOpen={Boolean(selectedSeries)}
+          onClose={() => setSelectedSeries(null)}
+        />
+      )}
     </div>
   )
 }
