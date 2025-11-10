@@ -9,6 +9,8 @@ export async function middleware(request: NextRequest) {
     secret: process.env.NEXTAUTH_SECRET,
   });
 
+  console.log(token)
+
   const { pathname } = request.nextUrl;
 
 
@@ -34,12 +36,12 @@ export async function middleware(request: NextRequest) {
   }
 
   // --- CASE 2: Logged in but not paid ---
-  if (token && !token.isPaid) {
-    if (pathname !== "/subscription") {
-      return NextResponse.redirect(new URL("/subscription", request.url));
-    }
-    return NextResponse.next();
-  }
+  // if (token && !token.isPaid) {
+  //   if (pathname !== "/subscription") {
+  //     return NextResponse.redirect(new URL("/subscription", request.url));
+  //   }
+  //   return NextResponse.next();
+  // }
 
   // --- CASE 3: Logged in and paid ---
   if (token?.isPaid && (pathname === "/more" || pathname === "/subscription")) {
