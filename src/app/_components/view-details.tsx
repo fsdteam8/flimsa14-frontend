@@ -16,7 +16,6 @@ const ViewDetails = ({
   onOpenChange: () => void;
   videoId?: string | null;
 }) => {
-  console.log(`Video ID 4: ${videoId}`);
 
   const { data, isLoading, isError, error } =
     useSuspenseQuery<SingleMovieResponse>({
@@ -28,7 +27,6 @@ const ViewDetails = ({
       retry: 3,
     });
 
-  console.log("view details", data?.data);
 
   if (isError) {
     console.error(error);

@@ -71,7 +71,6 @@ const GenreContainer = ({ id }: { id: string }) => {
     },
   });
 
-  console.log(data?.data);
   if (isLoading) return <div>Loading...</div>;
   if (isError) return <div>Error: {error?.message}</div>;
   return (

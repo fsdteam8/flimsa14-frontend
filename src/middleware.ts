@@ -11,7 +11,6 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
-  console.log(token)
 
   // --- PUBLIC ROUTES ---
   const publicRoutes = [

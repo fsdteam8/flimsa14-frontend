@@ -25,7 +25,6 @@ const HomeAllComponents = () => {
   }
 
   const moviesByGenre = data?.data?.genreWiseMovies || [];
-  console.log(data?.data, moviesByGenre)
   const heroMoviesData = data?.data?.movies || [];
   // console.log(data?.data?.movies)
   return (

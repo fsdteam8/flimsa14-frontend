@@ -51,7 +51,6 @@ const ComedyClub = ({
 }) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
-  console.log(data[0]?.movies);
   const movies = data[0]?.movies || [];
 
   if (isLoading) {

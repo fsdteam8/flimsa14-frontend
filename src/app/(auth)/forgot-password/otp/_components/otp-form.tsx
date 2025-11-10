@@ -146,8 +146,6 @@ export default function OtpForm() {
       return;
     }
     mutate({ otp: otpValue, email: decodedEmail });
-
-    console.log("OTP Verified:", otpValue);
   };
 
   return (

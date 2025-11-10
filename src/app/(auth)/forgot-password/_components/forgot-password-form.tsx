@@ -60,7 +60,6 @@ const ForgotPasswordForm = () => {
 
   // 2. Define a submit handler.
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
     mutate(values?.email);
   }
   return (

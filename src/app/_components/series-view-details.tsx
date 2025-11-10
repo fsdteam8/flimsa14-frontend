@@ -57,7 +57,6 @@ const SeriesViewDetails = ({
   onOpenChange: () => void;
   videoId?: string | null;
 }) => {
-  console.log(`Video ID 4: ${videoId}`);
 
   const { data, isLoading, isError, error } = useQuery<SeriesResponse>({
     queryKey: ["single-series", videoId],
@@ -67,7 +66,6 @@ const SeriesViewDetails = ({
       ),
   });
 
-  console.log(data?.data);
 
   if (isError) {
     console.error(error);

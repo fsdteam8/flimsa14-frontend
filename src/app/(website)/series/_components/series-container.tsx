@@ -75,9 +75,7 @@ const SeriesContainer = () => {
       ),
   });
 
-  console.log("series data", data?.data?.series);
   const seriesMoviesData = data?.data?.series || [];
-  console.log(seriesMoviesData);
 
   if (isLoading) {
     return <div>Loading...</div>;

@@ -7,7 +7,6 @@ const MovieCart = ({ blog }: { blog: Movie  }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [selectedVideoId, setSelectedVideoId] = useState<string | null>(null);
 
-  console.log(blog)
 
 
   return (

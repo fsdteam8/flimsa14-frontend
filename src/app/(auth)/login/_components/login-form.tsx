@@ -36,7 +36,6 @@ const LoginForm = () => {
   const [isLoadig, setIsLoading] = useState(false);
   const session = useSession();
   const isPaid = session?.data?.user?.isPaid ?? false;
-  console.log(isPaid);
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {

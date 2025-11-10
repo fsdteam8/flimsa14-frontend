@@ -77,7 +77,6 @@ const WishlistContainer = () => {
     enabled: !!token,
   });
 
-  console.log(data?.data);
 
     if (isLoading) {
     return (
@@ -102,7 +101,6 @@ const WishlistContainer = () => {
     <div className="container text-white">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-5 md:gap-6 lg:gap-8">
         {data?.data?.map((item: WishlistItem) => {
-          console.log(item)
           return (
             <div key={item?._id} className="">
               <Link href={`/my-account/wishlist/${item?._id}`}>

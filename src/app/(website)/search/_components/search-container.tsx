@@ -14,8 +14,7 @@ const SearchContainer: React.FC = () => {
   const [movies, setMovies] = useState<Movie[]>([]);
   const [series, setSeries] = useState<Series[]>([]);
 
-  console.log(movies, "movies");
-  console.log(series, "series");
+
 
   const { socket, isConnected } = useSocket();
 

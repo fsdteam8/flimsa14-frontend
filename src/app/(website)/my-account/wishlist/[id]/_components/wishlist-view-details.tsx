@@ -84,7 +84,6 @@ export interface Genre {
 const ViewDetails = ({ wishListId }: { wishListId?: string | null }) => {
     const session = useSession();
     const token = (session?.data?.user as { accessToken: string })?.accessToken || "";
-  console.log(`Video ID 4: ${wishListId}`);
 
   const { data, isLoading, isError, error } =
     useSuspenseQuery<WishlistEntryResponse>({
@@ -102,7 +101,6 @@ const ViewDetails = ({ wishListId }: { wishListId?: string | null }) => {
       retry: 3,
     });
 
-  console.log(data);
 
   if (isError) {
     console.error(error);

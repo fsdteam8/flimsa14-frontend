@@ -50,7 +50,6 @@ const Reels = ({
 }) => {
   const swiperRef = useRef<SwiperCore | null>(null);
 
-  console.log(data[0]?.movies);
   const movies = data[2]?.movies || [];
 
   if (isLoading) {
