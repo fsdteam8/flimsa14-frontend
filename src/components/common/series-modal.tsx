@@ -9,10 +9,9 @@ import React, {
 } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
-import { Bookmark, ChevronDown, Heart, Play, X } from "lucide-react";
+import { ChevronDown, Play, X } from "lucide-react";
 import VideoPlayer from "@/components/video/VideoPlayer";
 import type { Episode, Season, Series } from "@/types/series";
-import { Button } from "@/components/ui/button";
 import { useSession } from "next-auth/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { toast } from "react-toastify";

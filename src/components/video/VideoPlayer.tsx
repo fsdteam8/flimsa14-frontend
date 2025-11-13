@@ -452,6 +452,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
     el.addEventListener("click", onActivity);
     document.addEventListener("keydown", onKeyDown);
     document.addEventListener("fullscreenchange", onFsChange);
+    document.addEventListener("webkitfullscreenchange" as any, onFsChange as EventListener);
 
     return () => {
       el.removeEventListener("mousemove", onActivity);
@@ -460,6 +461,22 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
       el.removeEventListener("click", onActivity);
       document.removeEventListener("keydown", onKeyDown);
       document.removeEventListener("fullscreenchange", onFsChange);
+      document.removeEventListener("webkitfullscreenchange" as any, onFsChange as EventListener);
+    };
+  }, [showControls]);
+
+  useEffect(() => {
+    const video = videoRef.current;
+    if (!video) return;
+
+    const onWebkitFullscreen = () => showControls();
+
+    video.addEventListener("webkitbeginfullscreen" as any, onWebkitFullscreen);
+    video.addEventListener("webkitendfullscreen" as any, onWebkitFullscreen);
+
+    return () => {
+      video.removeEventListener("webkitbeginfullscreen" as any, onWebkitFullscreen);
+      video.removeEventListener("webkitendfullscreen" as any, onWebkitFullscreen);
     };
   }, [showControls]);
 
@@ -548,11 +565,71 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const toggleFullscreen = () => {
-    if (!containerRef.current) return;
-    if (document.fullscreenElement) {
-      document.exitFullscreen().catch(() => {});
-    } else {
-      containerRef.current.requestFullscreen().catch(() => {});
+    const container = containerRef.current;
+    const video = videoRef.current;
+    if (!container || !video) return;
+
+    type SafariDocument = Document & {
+      webkitFullscreenElement?: Element | null;
+      webkitExitFullscreen?: () => Promise<void>;
+    };
+
+    type SafariElement = HTMLElement & {
+      webkitRequestFullscreen?: () => Promise<void> | void;
+    };
+
+    type SafariVideo = HTMLVideoElement & {
+      webkitEnterFullscreen?: () => void;
+      webkitExitFullscreen?: () => void;
+      webkitDisplayingFullscreen?: boolean;
+    };
+
+    const doc = document as SafariDocument;
+    const containerEl = container as SafariElement;
+    const videoEl = video as SafariVideo;
+
+    const isFullscreenActive =
+      Boolean(doc.fullscreenElement || doc.webkitFullscreenElement) || Boolean(videoEl.webkitDisplayingFullscreen);
+
+    if (isFullscreenActive) {
+      if (doc.exitFullscreen) {
+        doc.exitFullscreen().catch(() => {});
+      } else if (doc.webkitExitFullscreen) {
+        doc.webkitExitFullscreen();
+      } else if (videoEl.webkitExitFullscreen) {
+        try {
+          videoEl.webkitExitFullscreen();
+        } catch {}
+      }
+      showControls();
+      return;
+    }
+
+    if (containerEl.requestFullscreen) {
+      containerEl.requestFullscreen().catch(() => {});
+      showControls();
+      return;
+    }
+
+    if (containerEl.webkitRequestFullscreen) {
+      try {
+        const maybePromise = containerEl.webkitRequestFullscreen();
+        if (maybePromise && typeof (maybePromise as Promise<void>).catch === "function") {
+          (maybePromise as Promise<void>).catch(() => {});
+        }
+        showControls();
+        return;
+      } catch {
+        // fall through to video fallback
+      }
+    }
+
+    if (videoEl.webkitEnterFullscreen) {
+      try {
+        videoEl.webkitEnterFullscreen();
+      } catch {
+        // no-op
+      }
     }
     showControls();
   };
