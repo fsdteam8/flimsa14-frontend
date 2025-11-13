@@ -20,6 +20,7 @@ import { Eye, EyeOff } from "lucide-react";
 import { useMutation } from "@tanstack/react-query";
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 
 export const formSchema = z
   .object({
@@ -66,7 +67,7 @@ const SignUpForm = () => {
   });
 
   //   sign up api integration
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationKey: ["signUp"],
     mutationFn: async (formData: z.infer<typeof formSchema>) => {
       const response = await fetch(
@@ -81,20 +82,44 @@ const SignUpForm = () => {
       );
       return response.json();
     },
-    onSuccess: (data) => {
+  });
+
+  // 2. Define a submit handler.
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    try {
+      const data = await mutateAsync(values);
+
       if (!data?.success) {
         toast.error(data?.message || "Something went wrong!");
         return;
       }
-      toast.success(data?.message || "Registration successful!");
-      router.push("/login");
-    },
-  });
 
-  // 2. Define a submit handler.
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
-    mutate(values);
+      toast.success(data?.message || "Registration successful!");
+
+      const autoLoginResult = await signIn("credentials", {
+        redirect: false,
+        email: values.email,
+        password: values.password,
+      });
+
+      if (autoLoginResult?.error) {
+        toast.error(
+          autoLoginResult.error ||
+            "Account created but auto-login failed. Please sign in."
+        );
+        router.push("/login");
+        return;
+      }
+
+      router.push("/subscription");
+    } catch (error) {
+      console.error("Signup failed: ", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Something went wrong. Please try again."
+      );
+    }
   }
   return (
     <div className="px-3 md:px-0">

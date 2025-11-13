@@ -432,6 +432,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useMutation } from "@tanstack/react-query";
+import { signIn } from "next-auth/react";
 import {
   ArrowLeft,
   Eye,
@@ -515,7 +516,7 @@ export default function SignupPage() {
   });
 
   // API Mutation
-  const { mutate, isPending } = useMutation({
+  const { mutateAsync, isPending } = useMutation({
     mutationKey: ["signUp"],
     mutationFn: async (data: {
       email: string;
@@ -534,18 +535,6 @@ export default function SignupPage() {
       );
       return response.json();
     },
-
-    onSuccess: (data) => {
-      if (!data?.success) {
-        toast.error(data?.message || "Something went wrong!");
-        return;
-      }
-      toast.success(data?.message || "Registration successful!");
-      router.push("/login");
-    },
-    onError: () => {
-      toast.error("Failed to create account.");
-    },
   });
 
   // Step 1 Submit
@@ -555,16 +544,51 @@ export default function SignupPage() {
   };
 
   // Step 2 Submit
-  const onStep2Submit = (data: Step2Data) => {
+  const onStep2Submit = async (data: Step2Data) => {
     if (!step1Data) return;
 
-    mutate({
-      email: step1Data.email,
-      password: data.password,
-      confirmPassword: data.confirmPassword,
-      firstName: data.firstName,
-      gender: data.gender,
-    });
+    try {
+      const payload = {
+        email: step1Data.email,
+        password: data.password,
+        confirmPassword: data.confirmPassword,
+        firstName: data.firstName,
+        gender: data.gender,
+      };
+
+      const response = await mutateAsync(payload);
+
+      if (!response?.success) {
+        toast.error(response?.message || "Something went wrong!");
+        return;
+      }
+
+      toast.success(response?.message || "Registration successful!");
+
+      const autoLoginResult = await signIn("credentials", {
+        redirect: false,
+        email: payload.email,
+        password: payload.password,
+      });
+
+      if (autoLoginResult?.error) {
+        toast.error(
+          autoLoginResult.error ||
+            "Account created but auto-login failed. Please sign in."
+        );
+        router.push("/login");
+        return;
+      }
+
+      router.push("/subscription");
+    } catch (error) {
+      console.error("Signup failed:", error);
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : "Failed to create account. Please try again."
+      );
+    }
   };
 
   const handleBack = () => {
