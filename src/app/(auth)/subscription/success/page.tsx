@@ -24,9 +24,8 @@ const SubscriptionSuccessPage = () => {
         </div>
         </div>
         <p className="text-lg text-gray-300">
-          Your payment was successful. You have been signed out - feel free to
-          log back into the AzloTV app whenever you are ready. Use the button
-          below if you want to jump straight to the login page.
+          Your payment was successful. Please Login to the Mobile App or  Use the button
+          below if you want to jump straight to streaming on the website.
         </p>
         <div className="flex flex-col gap-4 sm:flex-row">
           <Button

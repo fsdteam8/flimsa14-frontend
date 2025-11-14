@@ -1,13 +1,12 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 
 export interface Plan {
@@ -30,7 +29,6 @@ export interface PlansResponse {
 
 /* --------------------------------------------------------------- */
 export default function SubscriptionModal() {
-  const router = useRouter();
   const { data: session, update } = useSession();
   const token = session?.user?.accessToken;
 
@@ -49,6 +47,9 @@ export default function SubscriptionModal() {
     invoiceId: string;
     url: string;
   } | null>(null);
+  const invoiceWindowRef = useRef<Window | null>(null);
+
+  const INVOICE_CHECK_INTERVAL_MS = 5000;
 
   /* ----- default plan ------------------------------------------------ */
   useEffect(() => {
@@ -95,9 +96,18 @@ export default function SubscriptionModal() {
         return;
       }
       setPendingInvoice({ invoiceId, url: hostedInvoiceUrl });
-      window.open(hostedInvoiceUrl, "_blank", "noopener,noreferrer");
+      try {
+        invoiceWindowRef.current?.close();
+      } catch {
+        invoiceWindowRef.current = null;
+      }
+      invoiceWindowRef.current = window.open(
+        hostedInvoiceUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
       toast.info(
-        "Complete the payment on the opened Stripe invoice, then click 'Activate subscription' below."
+        "Complete the payment on the opened Stripe invoice - we'll detect it automatically. Use the status panel here if you need to refresh."
       );
     },
     onError: () => toast.error("Something went wrong"),
@@ -118,23 +128,107 @@ export default function SubscriptionModal() {
           body: JSON.stringify({ invoiceId }),
         }
       );
-      if (!res.ok) throw new Error("Failed to confirm payment");
-      return res.json();
-    },
-    onSuccess: async (data) => {
-      if (data.success) {
-        setPendingInvoice(null);
-        toast.success(data?.message || "Subscription payment successful!");
-        await update();
-        router.push("/watch");
-      } else {
-        toast.error(data?.message || "Payment confirmation failed");
+
+      let payload: any = null;
+      try {
+        payload = await res.json();
+      } catch {
+        // swallow json errors
       }
-    },
-    onError: async (err: any) => {
-      toast.error(err?.message || "Payment confirmation failed");
+
+      if (!res.ok) {
+        const errorMessage =
+          payload?.message || "Failed to confirm payment. Invoice not paid yet.";
+        throw new Error(errorMessage);
+      }
+      return payload;
     },
   });
+
+  const handleInvoiceConfirmation = useCallback(
+    async (
+      invoiceId: string,
+      { silent = false }: { silent?: boolean } = {}
+    ) => {
+      try {
+        const data = await confirmPaymentMutation.mutateAsync({ invoiceId });
+        if (data?.success) {
+          invoiceWindowRef.current?.close();
+          invoiceWindowRef.current = null;
+          setPendingInvoice(null);
+          if (!silent) {
+            toast.success(
+              data?.message || "Subscription payment successful!"
+            );
+          }
+          try {
+            await update();
+          } catch (err) {
+            console.error("Failed to refresh session", err);
+          }
+          await signOut({
+            callbackUrl: "/subscription/success",
+            redirect: true,
+          });
+        } else if (!silent) {
+          toast.error(data?.message || "Payment confirmation failed");
+        }
+        return data;
+      } catch (err: any) {
+        const message =
+          err?.message || "Payment confirmation failed. Please try again.";
+        const lowered = message.toLowerCase();
+        if (
+          !silent &&
+          !lowered.includes("invoice is not paid") &&
+          !lowered.includes("not paid yet")
+        ) {
+          toast.error(message);
+        }
+        throw err;
+      }
+    },
+    [confirmPaymentMutation, signOut, update]
+  );
+
+  useEffect(() => {
+    const invoiceId = pendingInvoice?.invoiceId;
+    if (!invoiceId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        await handleInvoiceConfirmation(invoiceId, { silent: true });
+      } catch (err) {
+        const message =
+          (err as Error)?.message?.toLowerCase() || "invoice is not paid yet";
+        if (
+          !message.includes("invoice is not paid") &&
+          !message.includes("not paid yet")
+        ) {
+          console.error("Invoice verification failed:", err);
+        }
+      } finally {
+        if (!cancelled && pendingInvoice?.invoiceId === invoiceId) {
+          timeoutId = setTimeout(poll, INVOICE_CHECK_INTERVAL_MS);
+        }
+      }
+    };
+
+    timeoutId = setTimeout(poll, INVOICE_CHECK_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [handleInvoiceConfirmation, pendingInvoice?.invoiceId]);
 
   const handlePayment = () => {
     if (!selectedPlanId) return toast.error("Please select a plan first");
@@ -198,11 +292,13 @@ export default function SubscriptionModal() {
               Account : {session?.user?.email}
             </p>
           </div>
- {pendingInvoice && (
+          {pendingInvoice && (
             <div className="mt-8 rounded-2xl border border-dashed border-indigo-400 bg-indigo-50/60 p-6 text-center text-black">
               <p className="text-base font-medium">
-                A Stripe invoice opened in a new tab. Finish the payment, then click
-                below to activate your subscription.
+                A Stripe invoice opened in a new tab. We are checking for payment
+                automatically - it should close on its own after a successful
+                charge. Need to revisit or refresh the status? Use the actions
+                below.
               </p>
               <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:justify-center">
                 <Button
@@ -217,15 +313,15 @@ export default function SubscriptionModal() {
                 <Button
                   className="bg-indigo-600 text-white hover:bg-indigo-700"
                   disabled={confirmPaymentMutation.isPending}
-                  onClick={() =>
-                    confirmPaymentMutation.mutate({
-                      invoiceId: pendingInvoice.invoiceId,
-                    })
-                  }
+                  onClick={() => {
+                    if (pendingInvoice?.invoiceId) {
+                      void handleInvoiceConfirmation(pendingInvoice.invoiceId);
+                    }
+                  }}
                 >
                   {confirmPaymentMutation.isPending
-                    ? "Checking payment…"
-                    : "Activate subscription"}
+                    ? "Checking payment..."
+                    : "Check status now"}
                 </Button>
               </div>
             </div>
