@@ -7,13 +7,8 @@ import { ArrowLeft, Check } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { StripePaymentModal } from "@/components/StripePaymentModal";
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
 export interface Plan {
   _id: string;
@@ -50,9 +45,10 @@ export default function SubscriptionModal() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [showStripeModal, setShowStripeModal] = useState(false);
-  const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
-    useState("");
+  const [pendingInvoice, setPendingInvoice] = useState<{
+    invoiceId: string;
+    url: string;
+  } | null>(null);
 
   /* ----- default plan ------------------------------------------------ */
   useEffect(() => {
@@ -92,9 +88,17 @@ export default function SubscriptionModal() {
         toast.error(data?.message || "Failed to create payment intent");
         return;
       }
-      // toast.success(data?.message || "Payment intent created");
-      setPaymentIntentClientSecret(data?.data?.clientSecret || "");
-      setShowStripeModal(true);
+      const invoiceId = data?.data?.invoiceId;
+      const hostedInvoiceUrl = data?.data?.hostedInvoiceUrl;
+      if (!invoiceId || !hostedInvoiceUrl) {
+        toast.error("Unable to generate Stripe invoice link.");
+        return;
+      }
+      setPendingInvoice({ invoiceId, url: hostedInvoiceUrl });
+      window.open(hostedInvoiceUrl, "_blank", "noopener,noreferrer");
+      toast.info(
+        "Complete the payment on the opened Stripe invoice, then click 'Activate subscription' below."
+      );
     },
     onError: () => toast.error("Something went wrong"),
   });
@@ -102,13 +106,7 @@ export default function SubscriptionModal() {
   /* ----- confirm payment -------------------------------------------- */
   const confirmPaymentMutation = useMutation({
     mutationKey: ["confirm-payment"],
-    mutationFn: async ({
-      paymentIntentId,
-      paymentMethodId,
-    }: {
-      paymentIntentId: string;
-      paymentMethodId: string;
-    }) => {
+    mutationFn: async ({ invoiceId }: { invoiceId: string }) => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/confirm-payment`,
         {
@@ -117,7 +115,7 @@ export default function SubscriptionModal() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ paymentIntentId, paymentMethodId }),
+          body: JSON.stringify({ invoiceId }),
         }
       );
       if (!res.ok) throw new Error("Failed to confirm payment");
@@ -125,16 +123,17 @@ export default function SubscriptionModal() {
     },
     onSuccess: async (data) => {
       if (data.success) {
+        setPendingInvoice(null);
         toast.success(data?.message || "Subscription payment successful!");
         await update();
-        setShowStripeModal(false);
-        await signOut({ redirect: false });
-        router.push("/subscription/success");
+        router.push("/watch");
       } else {
-        toast.error(data.message || "Payment confirmation failed");
+        toast.error(data?.message || "Payment confirmation failed");
       }
     },
-    onError: () => toast.error("Confirm payment error"),
+    onError: async (err: any) => {
+      toast.error(err?.message || "Payment confirmation failed");
+    },
   });
 
   const handlePayment = () => {
@@ -199,7 +198,38 @@ export default function SubscriptionModal() {
               Account : {session?.user?.email}
             </p>
           </div>
-
+ {pendingInvoice && (
+            <div className="mt-8 rounded-2xl border border-dashed border-indigo-400 bg-indigo-50/60 p-6 text-center text-black">
+              <p className="text-base font-medium">
+                A Stripe invoice opened in a new tab. Finish the payment, then click
+                below to activate your subscription.
+              </p>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="border-indigo-500 text-indigo-600 hover:bg-indigo-100"
+                  onClick={() =>
+                    window.open(pendingInvoice.url, "_blank", "noopener,noreferrer")
+                  }
+                >
+                  Open Invoice Again
+                </Button>
+                <Button
+                  className="bg-indigo-600 text-white hover:bg-indigo-700"
+                  disabled={confirmPaymentMutation.isPending}
+                  onClick={() =>
+                    confirmPaymentMutation.mutate({
+                      invoiceId: pendingInvoice.invoiceId,
+                    })
+                  }
+                >
+                  {confirmPaymentMutation.isPending
+                    ? "Checking payment…"
+                    : "Activate subscription"}
+                </Button>
+              </div>
+            </div>
+          )}
           {/* Plan Cards – side-by-side */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {data?.data?.map((plan) => {
@@ -281,40 +311,23 @@ export default function SubscriptionModal() {
                     }
                   `}
                   >
-                    {isPending ? "Processing…" : `Get ${plan.name}`}
+                    {isPending ? "Processing..." : `Get ${plan.name}`}
                   </Button>
                 </div>
               );
             })}
           </div>
 
-          {/* Total line (optional – matches screenshot) */}
+         
+
+          {/* Total line (optional — matches screenshot) */}
           {/* <div className="mt-8 text-center text-lg font-medium text-black">
           Total: <span className="text-2xl">${total.toFixed(2)}</span>
         </div> */}
         </div>
 
-        {/* ---------- Stripe Modal ---------- */}
-        {showStripeModal && paymentIntentClientSecret && (
-          <Elements
-            stripe={stripePromise}
-            options={{ clientSecret: paymentIntentClientSecret }}
-          >
-            <StripePaymentModal
-              open={showStripeModal}
-              onClose={() => setShowStripeModal(false)}
-              clientSecret={paymentIntentClientSecret}
-              onConfirm={(pi, pm) =>
-                confirmPaymentMutation.mutate({
-                  paymentIntentId: pi,
-                  paymentMethodId: pm,
-                })
-              }
-              amount={total}
-            />
-          </Elements>
-        )}
       </div>
     </div>
   );
 }
+
