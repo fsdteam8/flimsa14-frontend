@@ -1,19 +1,13 @@
 
 "use client";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
-import { Elements } from "@stripe/react-stripe-js";
-import { loadStripe } from "@stripe/stripe-js";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { StripePaymentModal } from "@/components/StripePaymentModal";
-
-const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLIC_KEY!);
 
 export interface Plan {
   _id: string;
@@ -35,7 +29,6 @@ export interface PlansResponse {
 
 /* --------------------------------------------------------------- */
 export default function SubscriptionModal() {
-  const router = useRouter();
   const { data: session, update } = useSession();
   const token = session?.user?.accessToken;
 
@@ -50,9 +43,13 @@ export default function SubscriptionModal() {
 
   const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
   const [selectedPlan, setSelectedPlan] = useState<Plan | null>(null);
-  const [showStripeModal, setShowStripeModal] = useState(false);
-  const [paymentIntentClientSecret, setPaymentIntentClientSecret] =
-    useState("");
+  const [pendingInvoice, setPendingInvoice] = useState<{
+    invoiceId: string;
+    url: string;
+  } | null>(null);
+  const invoiceWindowRef = useRef<Window | null>(null);
+
+  const INVOICE_CHECK_INTERVAL_MS = 5000;
 
   /* ----- default plan ------------------------------------------------ */
   useEffect(() => {
@@ -92,9 +89,26 @@ export default function SubscriptionModal() {
         toast.error(data?.message || "Failed to create payment intent");
         return;
       }
-      // toast.success(data?.message || "Payment intent created");
-      setPaymentIntentClientSecret(data?.data?.clientSecret || "");
-      setShowStripeModal(true);
+      const invoiceId = data?.data?.invoiceId;
+      const hostedInvoiceUrl = data?.data?.hostedInvoiceUrl;
+      if (!invoiceId || !hostedInvoiceUrl) {
+        toast.error("Unable to generate Stripe invoice link.");
+        return;
+      }
+      setPendingInvoice({ invoiceId, url: hostedInvoiceUrl });
+      try {
+        invoiceWindowRef.current?.close();
+      } catch {
+        invoiceWindowRef.current = null;
+      }
+      invoiceWindowRef.current = window.open(
+        hostedInvoiceUrl,
+        "_blank",
+        "noopener,noreferrer"
+      );
+      toast.info(
+        "Complete the payment on the opened Stripe invoice - we'll detect it automatically. Use the status panel here if you need to refresh."
+      );
     },
     onError: () => toast.error("Something went wrong"),
   });
@@ -102,13 +116,7 @@ export default function SubscriptionModal() {
   /* ----- confirm payment -------------------------------------------- */
   const confirmPaymentMutation = useMutation({
     mutationKey: ["confirm-payment"],
-    mutationFn: async ({
-      paymentIntentId,
-      paymentMethodId,
-    }: {
-      paymentIntentId: string;
-      paymentMethodId: string;
-    }) => {
+    mutationFn: async ({ invoiceId }: { invoiceId: string }) => {
       const res = await fetch(
         `${process.env.NEXT_PUBLIC_BACKEND_API}/subscription/confirm-payment`,
         {
@@ -117,24 +125,110 @@ export default function SubscriptionModal() {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-          body: JSON.stringify({ paymentIntentId, paymentMethodId }),
+          body: JSON.stringify({ invoiceId }),
         }
       );
-      if (!res.ok) throw new Error("Failed to confirm payment");
-      return res.json();
+
+      let payload: any = null;
+      try {
+        payload = await res.json();
+      } catch {
+        // swallow json errors
+      }
+
+      if (!res.ok) {
+        const errorMessage =
+          payload?.message || "Failed to confirm payment. Invoice not paid yet.";
+        throw new Error(errorMessage);
+      }
+      return payload;
     },
-    onSuccess: async (data) => {
-      if (data.success) {
-        toast.success(data?.message || "Subscription payment successful!");
-        await update();
-        setShowStripeModal(false);
-        router.push("/subscription/success");
-      } else {
-        toast.error(data.message || "Payment confirmation failed");
+  });
+
+  const handleInvoiceConfirmation = useCallback(
+    async (
+      invoiceId: string,
+      { silent = false }: { silent?: boolean } = {}
+    ) => {
+      try {
+        const data = await confirmPaymentMutation.mutateAsync({ invoiceId });
+        if (data?.success) {
+          invoiceWindowRef.current?.close();
+          invoiceWindowRef.current = null;
+          setPendingInvoice(null);
+          if (!silent) {
+            toast.success(
+              data?.message || "Subscription payment successful!"
+            );
+          }
+          try {
+            await update();
+          } catch (err) {
+            console.error("Failed to refresh session", err);
+          }
+          await signOut({
+            callbackUrl: "/subscription/success",
+            redirect: true,
+          });
+        } else if (!silent) {
+          toast.error(data?.message || "Payment confirmation failed");
+        }
+        return data;
+      } catch (err: any) {
+        const message =
+          err?.message || "Payment confirmation failed. Please try again.";
+        const lowered = message.toLowerCase();
+        if (
+          !silent &&
+          !lowered.includes("invoice is not paid") &&
+          !lowered.includes("not paid yet")
+        ) {
+          toast.error(message);
+        }
+        throw err;
       }
     },
-    onError: () => toast.error("Confirm payment error"),
-  });
+    [confirmPaymentMutation, signOut, update]
+  );
+
+  useEffect(() => {
+    const invoiceId = pendingInvoice?.invoiceId;
+    if (!invoiceId) {
+      return undefined;
+    }
+
+    let cancelled = false;
+    let timeoutId: ReturnType<typeof setTimeout> | null = null;
+
+    const poll = async () => {
+      if (cancelled) return;
+      try {
+        await handleInvoiceConfirmation(invoiceId, { silent: true });
+      } catch (err) {
+        const message =
+          (err as Error)?.message?.toLowerCase() || "invoice is not paid yet";
+        if (
+          !message.includes("invoice is not paid") &&
+          !message.includes("not paid yet")
+        ) {
+          console.error("Invoice verification failed:", err);
+        }
+      } finally {
+        if (!cancelled && pendingInvoice?.invoiceId === invoiceId) {
+          timeoutId = setTimeout(poll, INVOICE_CHECK_INTERVAL_MS);
+        }
+      }
+    };
+
+    timeoutId = setTimeout(poll, INVOICE_CHECK_INTERVAL_MS);
+
+    return () => {
+      cancelled = true;
+      if (timeoutId) {
+        clearTimeout(timeoutId);
+      }
+    };
+  }, [handleInvoiceConfirmation, pendingInvoice?.invoiceId]);
 
   const handlePayment = () => {
     if (!selectedPlanId) return toast.error("Please select a plan first");
@@ -198,7 +292,40 @@ export default function SubscriptionModal() {
               Account : {session?.user?.email}
             </p>
           </div>
-
+          {pendingInvoice && (
+            <div className="mt-8 rounded-2xl border border-dashed border-indigo-400 bg-indigo-50/60 p-6 text-center text-black">
+              <p className="text-base font-medium">
+                A Stripe invoice opened in a new tab. We are checking for payment
+                automatically - it should close on its own after a successful
+                charge. Need to revisit or refresh the status? Use the actions
+                below.
+              </p>
+              <div className="mt-4 flex flex-col gap-4 sm:flex-row sm:justify-center">
+                <Button
+                  variant="outline"
+                  className="border-indigo-500 text-indigo-600 hover:bg-indigo-100"
+                  onClick={() =>
+                    window.open(pendingInvoice.url, "_blank", "noopener,noreferrer")
+                  }
+                >
+                  Open Invoice Again
+                </Button>
+                <Button
+                  className="bg-indigo-600 text-white hover:bg-indigo-700"
+                  disabled={confirmPaymentMutation.isPending}
+                  onClick={() => {
+                    if (pendingInvoice?.invoiceId) {
+                      void handleInvoiceConfirmation(pendingInvoice.invoiceId);
+                    }
+                  }}
+                >
+                  {confirmPaymentMutation.isPending
+                    ? "Checking payment..."
+                    : "Check status now"}
+                </Button>
+              </div>
+            </div>
+          )}
           {/* Plan Cards – side-by-side */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
             {data?.data?.map((plan) => {
@@ -280,40 +407,23 @@ export default function SubscriptionModal() {
                     }
                   `}
                   >
-                    {isPending ? "Processing…" : `Get ${plan.name}`}
+                    {isPending ? "Processing..." : `Get ${plan.name}`}
                   </Button>
                 </div>
               );
             })}
           </div>
 
-          {/* Total line (optional – matches screenshot) */}
+         
+
+          {/* Total line (optional — matches screenshot) */}
           {/* <div className="mt-8 text-center text-lg font-medium text-black">
           Total: <span className="text-2xl">${total.toFixed(2)}</span>
         </div> */}
         </div>
 
-        {/* ---------- Stripe Modal ---------- */}
-        {showStripeModal && paymentIntentClientSecret && (
-          <Elements
-            stripe={stripePromise}
-            options={{ clientSecret: paymentIntentClientSecret }}
-          >
-            <StripePaymentModal
-              open={showStripeModal}
-              onClose={() => setShowStripeModal(false)}
-              clientSecret={paymentIntentClientSecret}
-              onConfirm={(pi, pm) =>
-                confirmPaymentMutation.mutate({
-                  paymentIntentId: pi,
-                  paymentMethodId: pm,
-                })
-              }
-              amount={total}
-            />
-          </Elements>
-        )}
       </div>
     </div>
   );
 }
+
