@@ -23,6 +23,7 @@ export async function middleware(request: NextRequest) {
     "/forgot-password",
     "/forgot-password/otp",
     "/forgot-password/otp/reset-password",
+    "/subscription/success",
   ];
 
   // Allow public routes without token

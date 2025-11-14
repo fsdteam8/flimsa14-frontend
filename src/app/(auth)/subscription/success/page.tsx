@@ -24,17 +24,17 @@ const SubscriptionSuccessPage = () => {
         </div>
         </div>
         <p className="text-lg text-gray-300">
-          Your payment was successful. You may now log in to the mobile app or
-          click the Watch streaming Here button to jump straight into streaming.
+          Your payment was successful. You have been signed out - feel free to
+          log back into the AzloTV app whenever you are ready. Use the button
+          below if you want to jump straight to the login page.
         </p>
         <div className="flex flex-col gap-4 sm:flex-row">
-         
-        <Button
-          asChild
-          className="flex-1 bg-white text-black hover:bg-white/90"
-        >
-          <Link href="/">Watch streaming here</Link>
-        </Button>
+          <Button
+            asChild
+            className="flex-1 bg-white text-black hover:bg-white/90"
+          >
+            <Link href="/login">Go to login</Link>
+          </Button>
         </div>
       </div>
     </div>

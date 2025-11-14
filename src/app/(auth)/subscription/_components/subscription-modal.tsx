@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Check } from "lucide-react";
 import { useMutation, useQuery } from "@tanstack/react-query";
-import { useSession } from "next-auth/react";
+import { useSession, signOut } from "next-auth/react";
 import { toast } from "react-toastify";
 import { Elements } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
@@ -128,6 +128,7 @@ export default function SubscriptionModal() {
         toast.success(data?.message || "Subscription payment successful!");
         await update();
         setShowStripeModal(false);
+        await signOut({ redirect: false });
         router.push("/subscription/success");
       } else {
         toast.error(data.message || "Payment confirmation failed");
