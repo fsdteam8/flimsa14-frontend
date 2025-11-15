@@ -13,6 +13,10 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
 
+    if (pathname === "/more" && token?.isPaid) {
+    return NextResponse.redirect(new URL("/", request.url));
+  }
+
 
   // --- PUBLIC ROUTES ---
   const publicRoutes = [
