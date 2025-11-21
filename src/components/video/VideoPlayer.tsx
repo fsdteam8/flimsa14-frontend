@@ -28,6 +28,7 @@ const qualityLabels: Record<string | number, string> = {
 };
 
 const MAX_RETRIES = 4;
+const HISTORY_INTERVAL_MS = 12000; // roughly every 10-15s as requested
 
 const VideoPlayer: React.FC<VideoPlayerProps> = ({
   src,
@@ -161,9 +162,10 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
   };
 
   const persistProgress = useCallback(() => {
-    if (!trackHistory || !videoRef.current || !duration || !token) return;
-    const currentTime = videoRef.current.currentTime;
-    const progress = Math.round((currentTime / duration) * 100);
+    if (!trackHistory || !videoRef.current || !token) return;
+    const currentTimeSeconds = Math.floor(videoRef.current.currentTime || 0);
+    const totalSeconds = Math.floor(videoRef.current.duration || duration || 0);
+    if (!currentTimeSeconds && !totalSeconds) return;
     const headers = {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`,
@@ -171,9 +173,20 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
 
     const historyPayload =
       movieId != null && movieId !== ""
-        ? { movieId, progress }
-        : seriesId
-        ? { seriesId, progress }
+        ? {
+            movieId,
+            progress: currentTimeSeconds,
+            totalDuration: totalSeconds || undefined,
+          }
+        : seriesId && episodeId
+        ? {
+            seriesId,
+            episodeId,
+            progress: currentTimeSeconds,
+            totalDuration: totalSeconds || undefined,
+            seasonNumber,
+            episodeNumber,
+          }
         : null;
 
     const watchtimePayload =
@@ -181,18 +194,18 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
         ? {
             contentType: "movie",
             movieId,
-            watchedSeconds: Math.floor(currentTime),
-            totalDuration: Math.floor(duration),
-            lastPosition: Math.floor(currentTime),
+            watchedSeconds: currentTimeSeconds,
+            totalDuration: totalSeconds || undefined,
+            lastPosition: currentTimeSeconds,
           }
         : resolvedContentType === "episode" && seriesId && episodeId
         ? {
             contentType: "episode",
             seriesId,
             episodeId,
-            watchedSeconds: Math.floor(currentTime),
-            totalDuration: Math.floor(duration),
-            lastPosition: Math.floor(currentTime),
+            watchedSeconds: currentTimeSeconds,
+            totalDuration: totalSeconds || undefined,
+            lastPosition: currentTimeSeconds,
             seasonNumber,
             episodeNumber,
           }
@@ -496,7 +509,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = setInterval(persistProgress, 5000);
+          intervalRef.current = setInterval(persistProgress, HISTORY_INTERVAL_MS);
           showControls();
         })
         .catch(() => {
@@ -771,7 +784,7 @@ const VideoPlayer: React.FC<VideoPlayerProps> = ({
           setIsPlaying(true);
           setGestureRequired(false);
           if (intervalRef.current) clearInterval(intervalRef.current);
-          intervalRef.current = setInterval(persistProgress, 5000);
+          intervalRef.current = setInterval(persistProgress, HISTORY_INTERVAL_MS);
           showControls();
         }}
         onPause={() => {
