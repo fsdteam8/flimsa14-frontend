@@ -107,15 +107,13 @@ const PrivacyPolicyPage = () => {
         <h2 className="text-2xl font-semibold">9. Contact Us</h2>
         <p>For questions about this Privacy Policy or your data:</p>
         <p className="font-medium">Azlo TV</p>
-        <p>
-          📧 Email:{" "}
+        <p>📧 Email : 
           <a
-            href="https://www.azlotv.com"
-            target="_blank"
+            href="mailto:team@azlotv.com"
             rel="noopener noreferrer"
-            className="underline hover:text-gray-300 transition-colors"
+            className="hover:underline hover:text-gray-300 transition-colors pl-1"
           >
-            https://www.azlotv.com
+              team@azlotv.com
           </a>
         </p>
       </section>

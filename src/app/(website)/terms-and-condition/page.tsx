@@ -157,14 +157,13 @@ const TermsAndConditionsPage = () => {
       {/* Section 11 */}
       <section className="space-y-4">
         <h2 className="text-2xl font-semibold">11. Contact Us</h2>
-        <p>📧 Email:{" "}
+        <p>📧 Email : 
           <a
-            href="https://www.azlotv.com"
-            target="_blank"
+            href="mailto:team@azlotv.com"
             rel="noopener noreferrer"
-            className="underline hover:text-gray-300 transition-colors"
+            className="hover:underline hover:text-gray-300 transition-colors pl-1"
           >
-            https://www.azlotv.com
+              team@azlotv.com
           </a>
         </p>
       </section>
