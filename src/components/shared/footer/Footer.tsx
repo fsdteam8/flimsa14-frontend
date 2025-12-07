@@ -82,7 +82,7 @@ const Footer = () => {
                 <GoDotFill /> Privacy Policy
               </li>
             </Link>
-            <Link href="/privacy-policy">
+            <Link href="/terms-and-condition">
               <li className="flex items-center gap-4 md:gap-5 text-base md:text-lg lg:text-xl font-medium text-[#999] leading-[120%] hover:underline hover:text-white hover:cursor-pointer">
                 <GoDotFill /> Term & Condition
               </li>

@@ -111,7 +111,7 @@ const SearchContainer: React.FC = () => {
 
           {/* cart data  */}
           <div className="container mx-auto">
-            <div className="px-4 pt-6">
+            <div className="px-4 pt-6 w-full flex item-center justify-center">
               <div className="mb-6 inline-flex rounded-full border border-white/20 bg-white/5 p-1 text-sm text-white">
                 {(["movies", "series"] as const).map((tab) => (
                   <button
